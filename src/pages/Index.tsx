@@ -1,16 +1,65 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState, useCallback } from "react";
+import DashboardHeader from "@/components/DashboardHeader";
+import ChallengeCard from "@/components/ChallengeCard";
+import ChallengeView from "@/components/ChallengeView";
+import { challenges } from "@/data/challenges";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  const [streak, setStreak] = useState(0);
+  const [activeChallenge, setActiveChallenge] = useState<string | null>(null);
+
+  const handleSelect = useCallback((id: string) => {
+    setActiveChallenge(id);
+  }, []);
+
+  const handleComplete = useCallback((isOptimal: boolean) => {
+    if (activeChallenge) {
+      setCompletedIds((prev) => new Set([...prev, activeChallenge]));
+      setStreak((prev) => (isOptimal ? prev + 1 : 0));
+      setActiveChallenge(null);
+    }
+  }, [activeChallenge]);
+
+  const currentChallenge = challenges.find((c) => c.id === activeChallenge);
+
+  if (currentChallenge) {
+    return (
+      <div className="min-h-screen bg-background">
+        <ChallengeView
+          challenge={currentChallenge}
+          onBack={() => setActiveChallenge(null)}
+          onComplete={handleComplete}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="min-h-screen bg-background">
+      <DashboardHeader
+        completedCount={completedIds.size}
+        totalCount={challenges.length}
+        streak={streak}
+      />
+      <main className="max-w-4xl mx-auto px-6 py-8">
+        <h2 className="font-display text-xl font-semibold text-foreground mb-6">
+          Desafios Disponíveis
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {challenges.map((challenge) => (
+            <ChallengeCard
+              key={challenge.id}
+              challenge={challenge}
+              isCompleted={completedIds.has(challenge.id)}
+              isLocked={false}
+              onSelect={handleSelect}
+            />
+          ))}
+        </div>
+      </main>
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
