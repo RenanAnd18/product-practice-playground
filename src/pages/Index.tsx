@@ -2,7 +2,30 @@ import { useState, useCallback } from "react";
 import DashboardHeader from "@/components/DashboardHeader";
 import ChallengeCard from "@/components/ChallengeCard";
 import ChallengeView from "@/components/ChallengeView";
-import { challenges } from "@/data/challenges";
+import { challenges, challengesByDifficulty } from "@/data/challenges";
+import { Badge } from "@/components/ui/badge";
+import { Shield, Swords, Crown } from "lucide-react";
+
+const difficultyConfig = {
+  junior: {
+    label: "Junior",
+    description: "Fundamentos de gestão de produto e priorização",
+    icon: Shield,
+    badgeClass: "bg-success/20 text-success border-success/30",
+  },
+  pleno: {
+    label: "Pleno",
+    description: "Comunicação com stakeholders e gestão de processos",
+    icon: Swords,
+    badgeClass: "bg-warning/20 text-warning border-warning/30",
+  },
+  senior: {
+    label: "Senior",
+    description: "Estratégia de produto, métricas avançadas e visão de negócio",
+    icon: Crown,
+    badgeClass: "bg-destructive/20 text-destructive border-destructive/30",
+  },
+} as const;
 
 const Index = () => {
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
@@ -42,21 +65,41 @@ const Index = () => {
         totalCount={challenges.length}
         streak={streak}
       />
-      <main className="max-w-4xl mx-auto px-6 py-8">
-        <h2 className="font-display text-xl font-semibold text-foreground mb-6">
-          Desafios Disponíveis
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {challenges.map((challenge) => (
-            <ChallengeCard
-              key={challenge.id}
-              challenge={challenge}
-              isCompleted={completedIds.has(challenge.id)}
-              isLocked={false}
-              onSelect={handleSelect}
-            />
-          ))}
-        </div>
+      <main className="max-w-4xl mx-auto px-6 py-8 space-y-10">
+        {(["junior", "pleno", "senior"] as const).map((difficulty) => {
+          const config = difficultyConfig[difficulty];
+          const items = challengesByDifficulty[difficulty];
+          const completedInLevel = items.filter((c) => completedIds.has(c.id)).length;
+          const Icon = config.icon;
+
+          return (
+            <section key={difficulty}>
+              <div className="flex items-center gap-3 mb-1">
+                <Icon className="w-5 h-5 text-muted-foreground" />
+                <h2 className="font-display text-xl font-semibold text-foreground">
+                  Nível {config.label}
+                </h2>
+                <Badge variant="outline" className={config.badgeClass}>
+                  {completedInLevel}/{items.length}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4 ml-8">
+                {config.description}
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {items.map((challenge) => (
+                  <ChallengeCard
+                    key={challenge.id}
+                    challenge={challenge}
+                    isCompleted={completedIds.has(challenge.id)}
+                    isLocked={false}
+                    onSelect={handleSelect}
+                  />
+                ))}
+              </div>
+            </section>
+          );
+        })}
       </main>
     </div>
   );
