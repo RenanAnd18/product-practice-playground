@@ -89,7 +89,7 @@ const ChallengeView = ({ challenge, onBack, onComplete }: ChallengeViewProps) =>
             O que você faz?
           </h3>
           <div className="space-y-3">
-            {challenge.decisions.map((decision, index) => (
+            {shuffledDecisions.map((decision, index) => (
               <Card
                 key={decision.id}
                 className="border-border hover:border-primary/40 transition-all cursor-pointer p-4 hover:bg-secondary/30"
