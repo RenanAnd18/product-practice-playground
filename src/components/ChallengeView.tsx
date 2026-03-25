@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ArrowLeft, MessageSquare, Lightbulb, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,6 +14,15 @@ interface ChallengeViewProps {
 const ChallengeView = ({ challenge, onBack, onComplete }: ChallengeViewProps) => {
   const [selectedDecision, setSelectedDecision] = useState<Decision | null>(null);
   const [showLearning, setShowLearning] = useState(false);
+
+  const shuffledDecisions = useMemo(() => {
+    const arr = [...challenge.decisions];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }, [challenge.id]);
 
   const handleDecision = (decision: Decision) => {
     setSelectedDecision(decision);
@@ -80,7 +89,7 @@ const ChallengeView = ({ challenge, onBack, onComplete }: ChallengeViewProps) =>
             O que você faz?
           </h3>
           <div className="space-y-3">
-            {challenge.decisions.map((decision, index) => (
+            {shuffledDecisions.map((decision, index) => (
               <Card
                 key={decision.id}
                 className="border-border hover:border-primary/40 transition-all cursor-pointer p-4 hover:bg-secondary/30"

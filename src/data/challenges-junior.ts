@@ -14,24 +14,24 @@ export const juniorChallenges: Challenge[] = [
     decisions: [
       {
         id: "j1a",
-        text: "Corrigir o bug do checkout primeiro, depois priorizar filtro avançado por impacto em receita, e agendar recomendações para o sprint seguinte com justificativa baseada em dados.",
-        impact: { stakeholders: 3, delivery: 2, value: 3, technical: 1 },
-        feedback: "Excelente! Você priorizou corretamente: bugs críticos primeiro (afetam receita diretamente), depois valor de negócio mensurável, e soube dizer 'não agora' com embasamento. Isso é maturidade de P.O.",
-        isOptimal: true,
-      },
-      {
-        id: "j1b",
         text: "Focar na feature de recomendações porque o CEO pediu — é importante manter a liderança satisfeita.",
         impact: { stakeholders: -2, delivery: -1, value: -1, technical: 0 },
         feedback: "Priorizar por HiPPO (Highest Paid Person's Opinion) é um anti-pattern clássico. O bug do checkout está causando perda de receita AGORA.",
         isOptimal: false,
       },
       {
-        id: "j1c",
+        id: "j1b",
         text: "Tentar encaixar tudo prometendo que o time vai dar um 'gás extra' nesse sprint.",
         impact: { stakeholders: -1, delivery: -3, value: -2, technical: -3 },
         feedback: "Over-commitment é um dos erros mais graves de um P.O. Isso gera débito técnico, burnout no time e perda de credibilidade.",
         isOptimal: false,
+      },
+      {
+        id: "j1c",
+        text: "Corrigir o bug do checkout primeiro, depois priorizar filtro avançado por impacto em receita, e agendar recomendações para o sprint seguinte com justificativa baseada em dados.",
+        impact: { stakeholders: 3, delivery: 2, value: 3, technical: 1 },
+        feedback: "Excelente! Você priorizou corretamente: bugs críticos primeiro (afetam receita diretamente), depois valor de negócio mensurável, e soube dizer 'não agora' com embasamento. Isso é maturidade de P.O.",
+        isOptimal: true,
       },
       {
         id: "j1d",
@@ -61,24 +61,31 @@ export const juniorChallenges: Challenge[] = [
     decisions: [
       {
         id: "j2a",
-        text: "Reconhecer o problema, propor um novo formato de refinamento com sessões de Example Mapping antes do sprint, e criar um template de user story com critérios de aceite em formato BDD.",
-        impact: { stakeholders: 3, delivery: 3, value: 2, technical: 3 },
-        feedback: "Ótima abordagem! Example Mapping é uma técnica poderosa para alinhar entendimento antes da sprint. O formato BDD torna os critérios de aceite testáveis e reduz ambiguidade.",
-        isOptimal: true,
-      },
-      {
-        id: "j2b",
         text: "Pedir para os devs pararem de reclamar e lerem as stories com mais atenção.",
         impact: { stakeholders: -3, delivery: -2, value: -1, technical: -3 },
         feedback: "Culpar o time é o caminho mais rápido para destruir confiança. Se 40% é re-trabalho, o problema está no processo, não nas pessoas.",
         isOptimal: false,
       },
       {
-        id: "j2c",
+        id: "j2b",
         text: "Escrever user stories mais detalhadas com documentação de 3+ páginas para cada item.",
         impact: { stakeholders: -1, delivery: -2, value: 0, technical: -1 },
         feedback: "Documentação excessiva é tão ruim quanto documentação insuficiente. A solução é colaboração, não burocracia.",
         isOptimal: false,
+      },
+      {
+        id: "j2c",
+        text: "Contratar um analista de negócios para escrever as stories no lugar do P.O.",
+        impact: { stakeholders: -1, delivery: -1, value: -2, technical: 0 },
+        feedback: "Delegar a escrita de stories não resolve o problema de comunicação. O P.O. precisa estar presente no refinamento e entender as dúvidas do time em primeira mão.",
+        isOptimal: false,
+      },
+      {
+        id: "j2d",
+        text: "Reconhecer o problema, propor um novo formato de refinamento com sessões de Example Mapping antes do sprint, e criar um template de user story com critérios de aceite em formato BDD.",
+        impact: { stakeholders: 3, delivery: 3, value: 2, technical: 3 },
+        feedback: "Ótima abordagem! Example Mapping é uma técnica poderosa para alinhar entendimento antes da sprint. O formato BDD torna os critérios de aceite testáveis e reduz ambiguidade.",
+        isOptimal: true,
       },
     ],
     learningPoints: [
@@ -101,23 +108,30 @@ export const juniorChallenges: Challenge[] = [
     decisions: [
       {
         id: "j3a",
-        text: "Preparar o planning com os top 10 itens do backlog pré-priorizados, pedir ao time que estime usando planning poker, e respeitar a velocidade histórica do time para definir o escopo.",
-        impact: { stakeholders: 3, delivery: 3, value: 2, technical: 2 },
-        feedback: "Perfeito! Você trouxe preparação (itens pré-priorizados), usou técnica de estimativa colaborativa (planning poker) e respeitou dados históricos. Isso é um planning profissional.",
-        isOptimal: true,
-      },
-      {
-        id: "j3b",
         text: "Deixar o time decidir sozinho o que vai entrar no sprint sem sua orientação.",
         impact: { stakeholders: -2, delivery: -1, value: -2, technical: 0 },
         feedback: "O P.O. é responsável por maximizar o valor do produto. Delegar 100% da priorização ao time técnico significa abrir mão do seu papel principal.",
         isOptimal: false,
       },
       {
+        id: "j3b",
+        text: "Preparar o planning com os top 10 itens do backlog pré-priorizados, pedir ao time que estime usando planning poker, e respeitar a velocidade histórica do time para definir o escopo.",
+        impact: { stakeholders: 3, delivery: 3, value: 2, technical: 2 },
+        feedback: "Perfeito! Você trouxe preparação (itens pré-priorizados), usou técnica de estimativa colaborativa (planning poker) e respeitou dados históricos. Isso é um planning profissional.",
+        isOptimal: true,
+      },
+      {
         id: "j3c",
         text: "Definir sozinho o que entra no sprint sem consultar o time sobre capacidade e complexidade.",
         impact: { stakeholders: -1, delivery: -3, value: -1, technical: -3 },
         feedback: "Planning é colaborativo. Definir escopo sem input do time gera estimativas irreais e compromete a entrega. O time é quem sabe o 'como' e o 'quanto'.",
+        isOptimal: false,
+      },
+      {
+        id: "j3d",
+        text: "Adiar o planning por uma semana até o Scrum Master voltar das férias.",
+        impact: { stakeholders: -2, delivery: -3, value: -1, technical: 0 },
+        feedback: "Esperar pelo Scrum Master mostra dependência e falta de proatividade. O P.O. deve ser capaz de conduzir o planning — é uma habilidade fundamental do papel.",
         isOptimal: false,
       },
     ],
@@ -141,24 +155,31 @@ export const juniorChallenges: Challenge[] = [
     decisions: [
       {
         id: "j4a",
-        text: "Priorizar o bug do cadastro (afeta conversão diretamente), e propor ao marketing uma solução alternativa para a campanha: usar uma landing page existente adaptada ou um serviço externo como Unbounce.",
-        impact: { stakeholders: 2, delivery: 2, value: 3, technical: 1 },
-        feedback: "Excelente! Você priorizou o que impacta usuários reais (bug de cadastro = perda de usuários), mas não ignorou o marketing — propôs uma alternativa criativa. Isso é pensar em valor total.",
-        isOptimal: true,
-      },
-      {
-        id: "j4b",
         text: "Fazer a landing page porque tem deadline e dinheiro investido. O bug pode esperar.",
         impact: { stakeholders: 0, delivery: 1, value: -2, technical: 0 },
         feedback: "Custo afundado não deveria guiar priorização. Cada dia com o bug = usuários perdidos permanentemente. Landing page sem cadastro funcionando = tráfego desperdiçado.",
         isOptimal: false,
       },
       {
-        id: "j4c",
+        id: "j4b",
         text: "Pedir para o time fazer hora extra e entregar os dois.",
         impact: { stakeholders: -1, delivery: -2, value: -1, technical: -3 },
         feedback: "Hora extra como ferramenta de gestão destrói a sustentabilidade do time. É aceitável em emergências raras, não como padrão de planejamento.",
         isOptimal: false,
+      },
+      {
+        id: "j4c",
+        text: "Escalar para o VP e deixar ele decidir qual priorizar.",
+        impact: { stakeholders: -2, delivery: -1, value: -1, technical: 0 },
+        feedback: "Escalar decisões de priorização que são claramente sua responsabilidade demonstra insegurança. O P.O. existe justamente para tomar essas decisões com base em dados e impacto.",
+        isOptimal: false,
+      },
+      {
+        id: "j4d",
+        text: "Priorizar o bug do cadastro (afeta conversão diretamente), e propor ao marketing uma solução alternativa para a campanha: usar uma landing page existente adaptada ou um serviço externo como Unbounce.",
+        impact: { stakeholders: 2, delivery: 2, value: 3, technical: 1 },
+        feedback: "Excelente! Você priorizou o que impacta usuários reais (bug de cadastro = perda de usuários), mas não ignorou o marketing — propôs uma alternativa criativa. Isso é pensar em valor total.",
+        isOptimal: true,
       },
     ],
     learningPoints: [
