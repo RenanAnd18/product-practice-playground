@@ -19,7 +19,7 @@ const typeConfig = {
   research: { icon: Search, label: "Research", className: "bg-info/20 text-info border-info/30" },
 };
 
-const effortLabels: Record<string, string> = { P: "Pequeno", M: "Médio", G: "Grande", GG: "Muito Grande" };
+const effortLabels: Record<string, string> = { P: "P (0.5 sprint)", M: "M (1 sprint)", G: "G (2 sprints)", GG: "GG (3 sprints)" };
 const effortValues: Record<string, number> = { P: 0.5, M: 1, G: 2, GG: 3 };
 
 const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
