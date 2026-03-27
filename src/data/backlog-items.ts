@@ -24,7 +24,7 @@ export const backlogScenarios: BacklogScenario[] = [
     id: "bs1",
     title: "Sprint de Crise no E-commerce",
     context: "Você é P.O. de um e-commerce que fatura R$2M/mês. A Black Friday é em 3 semanas. O time tem capacidade para 5 itens de tamanho M nesse sprint (2 semanas). Você precisa decidir o que entra, o que fica em progresso e o que pode esperar.",
-    constraint: "Capacidade: 5 itens M. Itens G = 2M, GG = 3M, P = 0.5M. A soma no 'In Progress' não pode passar de 5M equivalentes.",
+    constraint: "Capacidade do sprint: 5 pontos. Cada item tem um tamanho: P (Pequeno) = 0.5 ponto, M (Médio) = 1 ponto, G (Grande) = 2 pontos, GG (Muito Grande) = 3 pontos. Arraste os itens mais importantes para a coluna 'Sprint' sem ultrapassar 5 pontos no total.",
     sprintCapacity: "5M",
     items: [
       {
@@ -107,7 +107,7 @@ export const backlogScenarios: BacklogScenario[] = [
     id: "bs2",
     title: "SaaS B2B: Retenção em Queda",
     context: "Você é P.O. de um SaaS B2B de gestão de projetos. O churn aumentou de 3% para 7% nos últimos 2 meses. O time tem capacidade para 5 itens M nesse sprint. O CEO quer ações imediatas.",
-    constraint: "Capacidade: 5 itens M. Itens G = 2M, GG = 3M, P = 0.5M. Foque em impacto na retenção.",
+    constraint: "Capacidade do sprint: 5 pontos. Tamanhos: P (Pequeno) = 0.5 ponto, M (Médio) = 1 ponto, G (Grande) = 2 pontos, GG (Muito Grande) = 3 pontos. Foque em itens que impactam diretamente a retenção dos clientes.",
     sprintCapacity: "5M",
     items: [
       {

@@ -6,6 +6,7 @@ import BacklogSimulation from "@/components/BacklogSimulation";
 import { challenges, challengesByDifficulty } from "@/data/challenges";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Swords, Crown, BookOpen, Kanban } from "lucide-react";
+import WhatIsPO from "@/components/WhatIsPO";
 
 const difficultyConfig = {
   junior: {
@@ -95,6 +96,8 @@ const Index = () => {
           </button>
         </div>
       </div>
+
+      <WhatIsPO />
 
       {activeTab === "challenges" ? (
         <main className="max-w-4xl mx-auto px-6 py-8 space-y-10">
