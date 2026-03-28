@@ -244,7 +244,14 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
                 </h4>
               </div>
             </div>
-            <p className="text-sm text-foreground/80 leading-relaxed">{scenario.explanation}</p>
+            <div className="space-y-2 mt-1">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Priorização ideal:</p>
+              {scenario.explanation.map((line, i) => (
+                <p key={i} className="text-sm text-foreground/80 leading-relaxed pl-1 border-l-2 border-primary/20 ml-1 py-0.5 pl-3">
+                  {line}
+                </p>
+              ))}
+            </div>
           </Card>
           <Button onClick={handleReset} variant="outline" className="w-full">
             Tentar novamente

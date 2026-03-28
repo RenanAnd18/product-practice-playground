@@ -16,7 +16,7 @@ export interface BacklogScenario {
   sprintCapacity: string;
   items: BacklogItem[];
   optimalOrder: string[];
-  explanation: string;
+  explanation: string[];
 }
 
 export const backlogScenarios: BacklogScenario[] = [
@@ -101,7 +101,13 @@ export const backlogScenarios: BacklogScenario[] = [
       },
     ],
     optimalOrder: ["bs1-5", "bs1-1", "bs1-4", "bs1-7"],
-    explanation: "Priorização ideal: (1) Bug do PIX — maior impacto em receita (R$200k/mês, 40% das transações). (2) Bug do cupom mobile — segundo maior impacto, esforço pequeno e crítico para Black Friday. (3) Filtro avançado — dados comprovam 2.5x mais conversão, esforço médio. (4) Teste A/B checkout — discovery que pode gerar +20% conversão com esforço médio. A migração do gateway é importante mas arriscada pré-Black Friday. Wishlist, recomendações e fidelidade são features não validadas ou que precisam de mais tempo.",
+    explanation: [
+      "🥇 Bug do PIX — Maior impacto em receita (R$200k/mês, 40% das transações). Corrigir primeiro é essencial.",
+      "🥈 Bug do cupom mobile — Segundo maior impacto, esforço pequeno e crítico para a Black Friday.",
+      "🥉 Filtro avançado — Dados comprovam 2.5x mais conversão, esforço médio e alto retorno.",
+      "4️⃣ Teste A/B checkout — Discovery que pode gerar +20% conversão com esforço médio.",
+      "❌ A migração do gateway é importante mas arriscada pré-Black Friday. Wishlist, recomendações e fidelidade são features não validadas ou que precisam de mais tempo.",
+    ],
   },
   {
     id: "bs2",
@@ -184,6 +190,12 @@ export const backlogScenarios: BacklogScenario[] = [
       },
     ],
     optimalOrder: ["bs2-7", "bs2-2", "bs2-3", "bs2-5"],
-    explanation: "Priorização ideal: (1) Entrevistas de churn — esforço mínimo (P), mas essencial para entender se as ações de retenção estão na direção certa. (2) Bug de notificações — causa direta de frustração e desengajamento, impacta retenção. (3) Integração Slack — mencionada em 40% das entrevistas de churn, resolve causa real de abandono. (4) Templates — melhora activation rate de 23% para próximo do benchmark, impacta retenção de novos clientes. SSO é importante para receita mas não impacta churn atual. Dashboard e app mobile são features sem validação direta com o problema de retenção.",
+    explanation: [
+      "🥇 Entrevistas de churn — Esforço mínimo (P), mas essencial para validar se as ações de retenção estão na direção certa.",
+      "🥈 Bug de notificações — Causa direta de frustração e desengajamento, impacta retenção imediata.",
+      "🥉 Integração Slack — Mencionada em 40% das entrevistas de churn, resolve causa real de abandono.",
+      "4️⃣ Templates — Melhora activation rate de 23% para próximo do benchmark, impacta retenção de novos clientes.",
+      "❌ SSO é importante para receita mas não impacta churn atual. Dashboard e app mobile são features sem validação direta com o problema de retenção.",
+    ],
   },
 ];
