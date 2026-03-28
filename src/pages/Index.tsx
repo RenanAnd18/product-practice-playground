@@ -65,6 +65,7 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background">
         <ChallengeView
+          key={currentChallenge.id}
           challenge={currentChallenge}
           onBack={() => setActiveChallenge(null)}
           onComplete={handleComplete}
