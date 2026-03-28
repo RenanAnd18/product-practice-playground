@@ -1,0 +1,172 @@
+import { CheckCircle2, XCircle, ArrowRight, BarChart3, Clock, Zap, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import type { BacklogItem } from "@/data/backlog-items";
+
+const effortValues: Record<string, number> = { P: 0.5, M: 1, G: 2, GG: 3 };
+
+interface SprintMetrics {
+  velocity: number;
+  throughput: number;
+  leadTimeDays: number;
+  cycleTimeDays: number;
+  deliveredIds: string[];
+  notDeliveredIds: string[];
+}
+
+interface SprintResultsProps {
+  sprintNumber: number;
+  sprintItems: BacklogItem[];
+  metrics: SprintMetrics;
+  onAdvance: () => void;
+}
+
+const SprintResults = ({ sprintNumber, sprintItems, metrics, onAdvance }: SprintResultsProps) => {
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="text-center">
+        <h3 className="font-display text-xl font-bold text-foreground mb-1">
+          Resultado da Sprint {sprintNumber}
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          O time executou a sprint e aqui estão os resultados reais da entrega.
+        </p>
+      </div>
+
+      {/* Metrics Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <MetricCard
+          icon={<TrendingUp className="w-4 h-4" />}
+          label="Velocity"
+          value={`${metrics.velocity} pts`}
+          description="Pontos entregues nesta sprint"
+          color="text-primary"
+        />
+        <MetricCard
+          icon={<BarChart3 className="w-4 h-4" />}
+          label="Throughput"
+          value={`${metrics.throughput} itens`}
+          description="Quantidade de itens finalizados"
+          color="text-success"
+        />
+        <MetricCard
+          icon={<Clock className="w-4 h-4" />}
+          label="Lead Time"
+          value={`${metrics.leadTimeDays} dias`}
+          description="Tempo da ideia até a entrega"
+          color="text-warning"
+        />
+        <MetricCard
+          icon={<Zap className="w-4 h-4" />}
+          label="Cycle Time"
+          value={`${metrics.cycleTimeDays} dias`}
+          description="Tempo médio de execução"
+          color="text-info"
+        />
+      </div>
+
+      {/* Explanation */}
+      <Card className="p-4 bg-secondary/30 border-border">
+        <h4 className="font-display text-sm font-semibold text-foreground mb-2">📊 O que essas métricas significam?</h4>
+        <ul className="space-y-2 text-xs text-muted-foreground leading-relaxed">
+          <li>
+            <strong className="text-foreground">Velocity ({metrics.velocity} pts):</strong> É a soma dos pontos de esforço dos itens que o time conseguiu entregar. Use esse número para planejar o próximo sprint de forma mais realista.
+          </li>
+          <li>
+            <strong className="text-foreground">Throughput ({metrics.throughput} itens):</strong> Quantidade de itens que cruzaram a linha de chegada. Ajuda a entender a capacidade real do time independente do tamanho dos itens.
+          </li>
+          <li>
+            <strong className="text-foreground">Lead Time ({metrics.leadTimeDays} dias):</strong> Tempo total desde que o item foi priorizado até ser entregue. Quanto menor, mais rápido o time transforma ideias em valor.
+          </li>
+          <li>
+            <strong className="text-foreground">Cycle Time ({metrics.cycleTimeDays} dias):</strong> Tempo que o time levou efetivamente trabalhando no item. Se for muito maior que o Lead Time, pode indicar gargalos no processo.
+          </li>
+        </ul>
+      </Card>
+
+      {/* Delivered / Not Delivered */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="p-4 border-success/20">
+          <h4 className="font-display text-sm font-semibold text-success mb-3 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4" />
+            Entregues ({metrics.deliveredIds.length})
+          </h4>
+          <div className="space-y-2">
+            {sprintItems
+              .filter((i) => metrics.deliveredIds.includes(i.id))
+              .map((item) => (
+                <div key={item.id} className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="w-3 h-3 text-success shrink-0" />
+                  <span className="text-foreground/80 truncate">{item.title}</span>
+                  <Badge variant="outline" className="text-[9px] px-1 py-0 ml-auto shrink-0 border-border">
+                    {item.effort}
+                  </Badge>
+                </div>
+              ))}
+          </div>
+        </Card>
+
+        <Card className="p-4 border-destructive/20">
+          <h4 className="font-display text-sm font-semibold text-destructive mb-3 flex items-center gap-2">
+            <XCircle className="w-4 h-4" />
+            Não entregues ({metrics.notDeliveredIds.length})
+          </h4>
+          {metrics.notDeliveredIds.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Todos os itens foram entregues! 🎉</p>
+          ) : (
+            <div className="space-y-2">
+              {sprintItems
+                .filter((i) => metrics.notDeliveredIds.includes(i.id))
+                .map((item) => (
+                  <div key={item.id} className="flex items-center gap-2 text-sm">
+                    <XCircle className="w-3 h-3 text-destructive shrink-0" />
+                    <span className="text-foreground/80 truncate">{item.title}</span>
+                    <Badge variant="outline" className="text-[9px] px-1 py-0 ml-auto shrink-0 border-border">
+                      {item.effort}
+                    </Badge>
+                  </div>
+                ))}
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                ⚠️ Esses itens voltarão para o backlog na próxima sprint.
+              </p>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* Advance */}
+      <Button onClick={onAdvance} className="w-full" size="lg">
+        Avançar para Sprint {sprintNumber + 1}
+        <ArrowRight className="w-4 h-4 ml-2" />
+      </Button>
+    </div>
+  );
+};
+
+const MetricCard = ({
+  icon,
+  label,
+  value,
+  description,
+  color,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  description: string;
+  color: string;
+}) => (
+  <Card className="p-3 border-border">
+    <div className={`flex items-center gap-2 mb-1 ${color}`}>
+      {icon}
+      <span className="text-xs font-semibold uppercase tracking-wider">{label}</span>
+    </div>
+    <div className="text-xl font-display font-bold text-foreground">{value}</div>
+    <p className="text-[10px] text-muted-foreground mt-0.5">{description}</p>
+  </Card>
+);
+
+export default SprintResults;
+export type { SprintMetrics };

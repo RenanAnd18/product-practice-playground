@@ -3,6 +3,8 @@ import { ArrowLeft, CheckCircle2, AlertTriangle, Package, Search, Wrench, GripVe
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import SprintResults from "./SprintResults";
+import type { SprintMetrics } from "./SprintResults";
 import type { BacklogScenario, BacklogItem } from "@/data/backlog-items";
 
 interface BacklogBoardProps {
@@ -11,6 +13,7 @@ interface BacklogBoardProps {
 }
 
 type Column = "backlog" | "sprint" | "out";
+type Phase = "planning" | "results" | "feedback";
 
 const typeConfig = {
   bug: { icon: AlertTriangle, label: "Bug", className: "bg-destructive/20 text-destructive border-destructive/30" },
@@ -22,7 +25,47 @@ const typeConfig = {
 const effortLabels: Record<string, string> = { P: "P (0.5 sprint)", M: "M (1 sprint)", G: "G (2 sprints)", GG: "GG (3 sprints)" };
 const effortValues: Record<string, number> = { P: 0.5, M: 1, G: 2, GG: 3 };
 
+function simulateSprintExecution(sprintItemIds: string[], allItems: BacklogItem[]): SprintMetrics {
+  const sprintItems = sprintItemIds.map((id) => allItems.find((i) => i.id === id)!).filter(Boolean);
+
+  // Randomly determine delivered items (60-90% chance per item, smaller items more likely)
+  const deliveredIds: string[] = [];
+  const notDeliveredIds: string[] = [];
+
+  for (const item of sprintItems) {
+    const baseChance = { P: 0.95, M: 0.85, G: 0.65, GG: 0.5 }[item.effort];
+    if (Math.random() < baseChance) {
+      deliveredIds.push(item.id);
+    } else {
+      notDeliveredIds.push(item.id);
+    }
+  }
+
+  // Ensure at least one delivered if there are items
+  if (deliveredIds.length === 0 && sprintItems.length > 0) {
+    const lucky = sprintItems[Math.floor(Math.random() * sprintItems.length)];
+    deliveredIds.push(lucky.id);
+    const idx = notDeliveredIds.indexOf(lucky.id);
+    if (idx >= 0) notDeliveredIds.splice(idx, 1);
+  }
+
+  const velocity = deliveredIds.reduce((sum, id) => {
+    const item = allItems.find((i) => i.id === id);
+    return sum + (item ? effortValues[item.effort] : 0);
+  }, 0);
+
+  const throughput = deliveredIds.length;
+
+  // Simulate realistic lead/cycle times
+  const leadTimeDays = Math.floor(Math.random() * 5) + 8; // 8-12 days
+  const cycleTimeDays = Math.floor(Math.random() * 3) + 3; // 3-5 days
+
+  return { velocity, throughput, leadTimeDays, cycleTimeDays, deliveredIds, notDeliveredIds };
+}
+
 const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
+  const [currentSprint, setCurrentSprint] = useState(1);
+  const [phase, setPhase] = useState<Phase>("planning");
   const [columns, setColumns] = useState<Record<Column, string[]>>({
     backlog: scenario.items.map((i) => i.id),
     sprint: [],
@@ -31,6 +74,8 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
+  const [sprintMetrics, setSprintMetrics] = useState<SprintMetrics | null>(null);
+  const [sprintHistory, setSprintHistory] = useState<{ sprint: number; metrics: SprintMetrics }[]>([]);
 
   const itemMap = new Map(scenario.items.map((i) => [i.id, i]));
 
@@ -40,6 +85,11 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
       return sum + (item ? effortValues[item.effort] : 0);
     }, 0);
   }, [columns.sprint, itemMap]);
+
+  // Use previous velocity as capacity hint for sprint 2+
+  const sprintCapacity = currentSprint === 1
+    ? 5
+    : (sprintHistory.length > 0 ? sprintHistory[sprintHistory.length - 1].metrics.velocity : 5);
 
   const handleDragStart = (e: React.DragEvent, itemId: string) => {
     setDraggedItem(itemId);
@@ -58,7 +108,6 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
     const item = itemMap.get(draggedItem);
     if (!item) return;
 
-    // Check capacity for sprint column
     if (targetColumn === "sprint") {
       const currentLoad = columns.sprint
         .filter((id) => id !== draggedItem)
@@ -66,7 +115,7 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
           const i = itemMap.get(id);
           return sum + (i ? effortValues[i.effort] : 0);
         }, 0);
-      if (currentLoad + effortValues[item.effort] > 5) return;
+      if (currentLoad + effortValues[item.effort] > sprintCapacity) return;
     }
 
     setColumns((prev) => {
@@ -81,17 +130,65 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
   };
 
   const handleSubmit = () => {
-    const sprintItems = columns.sprint;
-    const optimal = scenario.optimalOrder;
+    if (currentSprint === 1) {
+      // Sprint 1: show optimal feedback first
+      const sprintItems = columns.sprint;
+      const optimal = scenario.optimalOrder;
+      let points = 0;
+      for (const id of optimal) {
+        if (sprintItems.includes(id)) points += 25;
+      }
+      setScore(points);
+      setSubmitted(true);
+    } else {
+      // Sprint 2+: go straight to execution
+      executeSprintAndShowResults();
+    }
+  };
 
-    let points = 0;
-    // Points for including optimal items
-    for (const id of optimal) {
-      if (sprintItems.includes(id)) points += 25;
+  const handleProceedToExecution = () => {
+    executeSprintAndShowResults();
+  };
+
+  const executeSprintAndShowResults = () => {
+    const metrics = simulateSprintExecution(columns.sprint, scenario.items);
+    setSprintMetrics(metrics);
+    setSprintHistory((prev) => [...prev, { sprint: currentSprint, metrics }]);
+    setPhase("results");
+  };
+
+  const handleAdvanceToNextSprint = () => {
+    if (!sprintMetrics) return;
+
+    // Not delivered items go back to backlog
+    const notDelivered = sprintMetrics.notDeliveredIds;
+    // Items that were in backlog or out stay, delivered items are removed
+    const delivered = new Set(sprintMetrics.deliveredIds);
+
+    const remainingBacklog = columns.backlog.filter((id) => !delivered.has(id));
+    const remainingOut = columns.out.filter((id) => !delivered.has(id));
+
+    // Not delivered items return to backlog
+    const newBacklog = [...remainingBacklog, ...notDelivered];
+    const availableItems = newBacklog.length + remainingOut.length;
+
+    if (availableItems === 0) {
+      // All done - nothing left to plan
+      setPhase("feedback");
+      return;
     }
 
-    setScore(points);
-    setSubmitted(true);
+    setColumns({
+      backlog: newBacklog,
+      sprint: [],
+      out: remainingOut,
+    });
+
+    setCurrentSprint((prev) => prev + 1);
+    setPhase("planning");
+    setSubmitted(false);
+    setScore(0);
+    setSprintMetrics(null);
   };
 
   const handleReset = () => {
@@ -102,18 +199,22 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
     });
     setSubmitted(false);
     setScore(0);
+    setCurrentSprint(1);
+    setPhase("planning");
+    setSprintMetrics(null);
+    setSprintHistory([]);
   };
 
   const renderItem = (item: BacklogItem) => {
     const config = typeConfig[item.type];
     const Icon = config.icon;
-    const isOptimal = submitted && scenario.optimalOrder.includes(item.id);
+    const isOptimal = submitted && currentSprint === 1 && scenario.optimalOrder.includes(item.id);
     const isInSprint = columns.sprint.includes(item.id);
 
     return (
       <div
         key={item.id}
-        draggable={!submitted}
+        draggable={!submitted && phase === "planning"}
         onDragStart={(e) => handleDragStart(e, item.id)}
         className={`group cursor-grab active:cursor-grabbing transition-all ${
           submitted && isOptimal && isInSprint
@@ -143,7 +244,7 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
               </p>
             </div>
           </div>
-          {submitted && isOptimal && (
+          {submitted && currentSprint === 1 && isOptimal && (
             <div className="mt-2 flex items-center gap-1 text-xs">
               {isInSprint ? (
                 <span className="text-success flex items-center gap-1">
@@ -163,9 +264,75 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
 
   const sprintLoad = getSprintLoad();
 
+  // Results phase
+  if (phase === "results" && sprintMetrics) {
+    const sprintItems = columns.sprint.map((id) => itemMap.get(id)!).filter(Boolean);
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4 font-mono text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Voltar
+        </button>
+
+        <SprintResults
+          sprintNumber={currentSprint}
+          sprintItems={sprintItems}
+          metrics={sprintMetrics}
+          onAdvance={handleAdvanceToNextSprint}
+        />
+      </div>
+    );
+  }
+
+  // All done phase
+  if (phase === "feedback") {
+    const totalDelivered = sprintHistory.reduce((sum, h) => sum + h.metrics.throughput, 0);
+    const avgVelocity = sprintHistory.length > 0
+      ? (sprintHistory.reduce((sum, h) => sum + h.metrics.velocity, 0) / sprintHistory.length).toFixed(1)
+      : "0";
+
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-12 text-center">
+        <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
+          <CheckCircle2 className="w-8 h-8 text-success" />
+        </div>
+        <h2 className="font-display text-2xl font-bold text-foreground mb-2">
+          Backlog concluído! 🎉
+        </h2>
+        <p className="text-muted-foreground mb-6">
+          Você completou {sprintHistory.length} sprints e entregou {totalDelivered} itens com velocity média de {avgVelocity} pontos.
+        </p>
+
+        <Card className="p-5 border-border mb-6">
+          <h3 className="font-display font-semibold text-foreground mb-3 text-sm">Resumo por Sprint</h3>
+          <div className="space-y-2">
+            {sprintHistory.map((h) => (
+              <div key={h.sprint} className="flex items-center justify-between text-sm py-1.5 border-b border-border last:border-0">
+                <span className="text-foreground">Sprint {h.sprint}</span>
+                <div className="flex gap-4 text-xs text-muted-foreground">
+                  <span>Velocity: <strong className="text-foreground">{h.metrics.velocity}</strong></span>
+                  <span>Entregues: <strong className="text-foreground">{h.metrics.throughput}</strong></span>
+                  <span>Cycle Time: <strong className="text-foreground">{h.metrics.cycleTimeDays}d</strong></span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Button onClick={handleReset} className="w-full">
+          Refazer simulação
+        </Button>
+      </div>
+    );
+  }
+
+  // Planning phase
   const columnConfig = [
     { key: "backlog" as Column, title: "📋 Backlog", subtitle: "Itens disponíveis" },
-    { key: "sprint" as Column, title: "🚀 Sprint", subtitle: `Capacidade: ${sprintLoad}M / 5M` },
+    { key: "sprint" as Column, title: `🚀 Sprint ${currentSprint}`, subtitle: `Capacidade: ${sprintLoad} / ${sprintCapacity} pts` },
     { key: "out" as Column, title: "🚫 Fora do Sprint", subtitle: "Descartados / próximo sprint" },
   ];
 
@@ -180,11 +347,28 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
       </button>
 
       <div className="mb-6">
-        <h2 className="font-display text-xl font-bold text-foreground mb-2">{scenario.title}</h2>
+        <div className="flex items-center gap-3 mb-2">
+          <h2 className="font-display text-xl font-bold text-foreground">{scenario.title}</h2>
+          <Badge variant="outline" className="border-primary/30 text-primary">Sprint {currentSprint}</Badge>
+        </div>
         <p className="text-sm text-muted-foreground leading-relaxed mb-2">{scenario.context}</p>
         <Card className="bg-secondary/50 border-border p-3">
-          <p className="text-xs text-secondary-foreground font-mono">⚠️ {scenario.constraint}</p>
+          <p className="text-xs text-secondary-foreground font-mono">
+            ⚠️ {currentSprint === 1 ? scenario.constraint : `Baseado na velocity da sprint anterior (${sprintCapacity} pts), planeje a Sprint ${currentSprint}. Itens não entregues voltaram ao backlog.`}
+          </p>
         </Card>
+
+        {/* Show previous sprint metrics as context */}
+        {sprintHistory.length > 0 && (
+          <Card className="bg-info/5 border-info/20 p-3 mt-2">
+            <p className="text-xs font-semibold text-info mb-1">📊 Métricas da Sprint {currentSprint - 1}:</p>
+            <p className="text-xs text-muted-foreground">
+              Velocity: <strong>{sprintHistory[sprintHistory.length - 1].metrics.velocity} pts</strong> · 
+              Throughput: <strong>{sprintHistory[sprintHistory.length - 1].metrics.throughput} itens</strong> · 
+              Cycle Time: <strong>{sprintHistory[sprintHistory.length - 1].metrics.cycleTimeDays} dias</strong>
+            </p>
+          </Card>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
@@ -195,7 +379,7 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
             onDrop={(e) => handleDrop(e, col.key)}
             className={`min-h-[200px] rounded-lg border-2 border-dashed p-3 transition-colors ${
               draggedItem ? "border-primary/30 bg-primary/5" : "border-border bg-secondary/20"
-            } ${col.key === "sprint" && sprintLoad > 5 ? "border-destructive/50" : ""}`}
+            } ${col.key === "sprint" && sprintLoad > sprintCapacity ? "border-destructive/50" : ""}`}
           >
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-display text-sm font-semibold text-foreground">{col.title}</h3>
@@ -206,9 +390,9 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
                 <div className="h-2 bg-secondary rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-300 ${
-                      sprintLoad > 5 ? "bg-destructive" : sprintLoad > 4 ? "bg-warning" : "bg-success"
+                      sprintLoad > sprintCapacity ? "bg-destructive" : sprintLoad > sprintCapacity * 0.8 ? "bg-warning" : "bg-success"
                     }`}
-                    style={{ width: `${Math.min((sprintLoad / 5) * 100, 100)}%` }}
+                    style={{ width: `${Math.min((sprintLoad / sprintCapacity) * 100, 100)}%` }}
                   />
                 </div>
               </div>
@@ -229,7 +413,7 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
           disabled={columns.sprint.length === 0}
           className="w-full"
         >
-          Validar Priorização
+          {currentSprint === 1 ? "Validar Priorização" : `Executar Sprint ${currentSprint}`}
         </Button>
       ) : (
         <div className="space-y-4">
@@ -247,15 +431,20 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
             <div className="space-y-2 mt-1">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Priorização ideal:</p>
               {scenario.explanation.map((line, i) => (
-                <p key={i} className="text-sm text-foreground/80 leading-relaxed pl-1 border-l-2 border-primary/20 ml-1 py-0.5 pl-3">
+                <p key={i} className="text-sm text-foreground/80 leading-relaxed pl-3 border-l-2 border-primary/20 ml-1 py-0.5">
                   {line}
                 </p>
               ))}
             </div>
           </Card>
-          <Button onClick={handleReset} variant="outline" className="w-full">
-            Tentar novamente
-          </Button>
+          <div className="flex gap-3">
+            <Button onClick={handleReset} variant="outline" className="flex-1">
+              Recomeçar
+            </Button>
+            <Button onClick={handleProceedToExecution} className="flex-1">
+              Executar Sprint {currentSprint} →
+            </Button>
+          </div>
         </div>
       )}
     </div>
