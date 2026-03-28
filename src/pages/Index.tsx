@@ -43,6 +43,18 @@ const Index = () => {
     if (activeChallenge) {
       setCompletedIds((prev) => new Set([...prev, activeChallenge]));
       setStreak((prev) => (isOptimal ? prev + 1 : 0));
+
+      // Find next challenge of same difficulty
+      const current = challenges.find((c) => c.id === activeChallenge);
+      if (current) {
+        const sameLevelChallenges = challengesByDifficulty[current.difficulty as keyof typeof challengesByDifficulty];
+        const currentIndex = sameLevelChallenges.findIndex((c) => c.id === activeChallenge);
+        const next = sameLevelChallenges[currentIndex + 1];
+        if (next) {
+          setActiveChallenge(next.id);
+          return;
+        }
+      }
       setActiveChallenge(null);
     }
   }, [activeChallenge]);
