@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import DashboardHeader from "@/components/DashboardHeader";
 import ChallengeCard from "@/components/ChallengeCard";
 import ChallengeView from "@/components/ChallengeView";
+import LevelComplete from "@/components/LevelComplete";
 import BacklogSimulation from "@/components/BacklogSimulation";
 import { challenges, challengesByDifficulty } from "@/data/challenges";
 import { Badge } from "@/components/ui/badge";
@@ -29,11 +30,15 @@ const difficultyConfig = {
   },
 } as const;
 
+type Difficulty = "junior" | "pleno" | "senior";
+
 const Index = () => {
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [streak, setStreak] = useState(0);
   const [activeChallenge, setActiveChallenge] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"challenges" | "backlog">("challenges");
+  const [results, setResults] = useState<Record<string, boolean>>({});
+  const [completedLevel, setCompletedLevel] = useState<Difficulty | null>(null);
 
   const handleSelect = useCallback((id: string) => {
     setActiveChallenge(id);
@@ -42,22 +47,62 @@ const Index = () => {
   const handleComplete = useCallback((isOptimal: boolean) => {
     if (activeChallenge) {
       setCompletedIds((prev) => new Set([...prev, activeChallenge]));
+      setResults((prev) => ({ ...prev, [activeChallenge]: isOptimal }));
       setStreak((prev) => (isOptimal ? prev + 1 : 0));
 
-      // Find next challenge of same difficulty
       const current = challenges.find((c) => c.id === activeChallenge);
       if (current) {
-        const sameLevelChallenges = challengesByDifficulty[current.difficulty as keyof typeof challengesByDifficulty];
+        const difficulty = current.difficulty as Difficulty;
+        const sameLevelChallenges = challengesByDifficulty[difficulty];
         const currentIndex = sameLevelChallenges.findIndex((c) => c.id === activeChallenge);
         const next = sameLevelChallenges[currentIndex + 1];
         if (next) {
           setActiveChallenge(next.id);
           return;
         }
+        // Last challenge of level — show completion screen
+        setActiveChallenge(null);
+        setCompletedLevel(difficulty);
+        return;
       }
       setActiveChallenge(null);
     }
   }, [activeChallenge]);
+
+  const handleRetryLevel = useCallback(() => {
+    if (completedLevel) {
+      const levelChallenges = challengesByDifficulty[completedLevel];
+      // Clear results for this level
+      setCompletedIds((prev) => {
+        const next = new Set(prev);
+        levelChallenges.forEach((c) => next.delete(c.id));
+        return next;
+      });
+      setResults((prev) => {
+        const next = { ...prev };
+        levelChallenges.forEach((c) => delete next[c.id]);
+        return next;
+      });
+      setCompletedLevel(null);
+      setActiveChallenge(levelChallenges[0].id);
+    }
+  }, [completedLevel]);
+
+  // Show level complete screen
+  if (completedLevel) {
+    const levelChallenges = challengesByDifficulty[completedLevel];
+    return (
+      <div className="min-h-screen bg-background">
+        <LevelComplete
+          difficulty={difficultyConfig[completedLevel].label}
+          challenges={levelChallenges}
+          results={results}
+          onRetry={handleRetryLevel}
+          onBack={() => setCompletedLevel(null)}
+        />
+      </div>
+    );
+  }
 
   const currentChallenge = challenges.find((c) => c.id === activeChallenge);
 
