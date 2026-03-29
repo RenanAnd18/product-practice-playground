@@ -1,4 +1,5 @@
-import { CheckCircle2, XCircle, ArrowRight, BarChart3, Clock, Zap, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle2, XCircle, ArrowRight, BarChart3, Clock, Zap, TrendingUp, Lightbulb, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
