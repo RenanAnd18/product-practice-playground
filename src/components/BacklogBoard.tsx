@@ -76,8 +76,10 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
   const [score, setScore] = useState(0);
   const [sprintMetrics, setSprintMetrics] = useState<SprintMetrics | null>(null);
   const [sprintHistory, setSprintHistory] = useState<{ sprint: number; metrics: SprintMetrics }[]>([]);
+  const [allItems, setAllItems] = useState<BacklogItem[]>(scenario.items);
+  const [newItemsAnnouncement, setNewItemsAnnouncement] = useState<BacklogItem[]>([]);
 
-  const itemMap = new Map(scenario.items.map((i) => [i.id, i]));
+  const itemMap = new Map(allItems.map((i) => [i.id, i]));
 
   const getSprintLoad = useCallback(() => {
     return columns.sprint.reduce((sum, id) => {
@@ -151,7 +153,7 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
   };
 
   const executeSprintAndShowResults = () => {
-    const metrics = simulateSprintExecution(columns.sprint, scenario.items);
+    const metrics = simulateSprintExecution(columns.sprint, allItems);
     setSprintMetrics(metrics);
     setSprintHistory((prev) => [...prev, { sprint: currentSprint, metrics }]);
     setPhase("results");
@@ -160,20 +162,32 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
   const handleAdvanceToNextSprint = () => {
     if (!sprintMetrics) return;
 
-    // Not delivered items go back to backlog
-    const notDelivered = sprintMetrics.notDeliveredIds;
-    // Items that were in backlog or out stay, delivered items are removed
     const delivered = new Set(sprintMetrics.deliveredIds);
+    const notDelivered = sprintMetrics.notDeliveredIds;
 
+    // Remaining backlog items (not delivered)
     const remainingBacklog = columns.backlog.filter((id) => !delivered.has(id));
-    const remainingOut = columns.out.filter((id) => !delivered.has(id));
+    
+    // "Out" items come BACK to backlog (simulating real PO life)
+    const outItems = columns.out.filter((id) => !delivered.has(id));
 
-    // Not delivered items return to backlog
-    const newBacklog = [...remainingBacklog, ...notDelivered];
-    const availableItems = newBacklog.length + remainingOut.length;
+    // Get incoming new items for this sprint transition
+    const incomingIndex = currentSprint - 1; // after sprint 1 → index 0
+    const incomingItems = scenario.incomingItems?.[incomingIndex] ?? [];
+
+    // Add incoming items to allItems
+    if (incomingItems.length > 0) {
+      setAllItems((prev) => [...prev, ...incomingItems]);
+      setNewItemsAnnouncement(incomingItems);
+    } else {
+      setNewItemsAnnouncement([]);
+    }
+
+    // Merge: not delivered + remaining backlog + out items + new incoming
+    const newBacklog = [...remainingBacklog, ...notDelivered, ...outItems, ...incomingItems.map((i) => i.id)];
+    const availableItems = newBacklog.length;
 
     if (availableItems === 0) {
-      // All done - nothing left to plan
       setPhase("feedback");
       return;
     }
@@ -181,7 +195,7 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
     setColumns({
       backlog: newBacklog,
       sprint: [],
-      out: remainingOut,
+      out: [],
     });
 
     setCurrentSprint((prev) => prev + 1);
