@@ -211,6 +211,8 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
       sprint: [],
       out: [],
     });
+    setAllItems(scenario.items);
+    setNewItemsAnnouncement([]);
     setSubmitted(false);
     setScore(0);
     setCurrentSprint(1);
