@@ -76,8 +76,10 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
   const [score, setScore] = useState(0);
   const [sprintMetrics, setSprintMetrics] = useState<SprintMetrics | null>(null);
   const [sprintHistory, setSprintHistory] = useState<{ sprint: number; metrics: SprintMetrics }[]>([]);
+  const [allItems, setAllItems] = useState<BacklogItem[]>(scenario.items);
+  const [newItemsAnnouncement, setNewItemsAnnouncement] = useState<BacklogItem[]>([]);
 
-  const itemMap = new Map(scenario.items.map((i) => [i.id, i]));
+  const itemMap = new Map(allItems.map((i) => [i.id, i]));
 
   const getSprintLoad = useCallback(() => {
     return columns.sprint.reduce((sum, id) => {
@@ -151,7 +153,7 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
   };
 
   const executeSprintAndShowResults = () => {
-    const metrics = simulateSprintExecution(columns.sprint, scenario.items);
+    const metrics = simulateSprintExecution(columns.sprint, allItems);
     setSprintMetrics(metrics);
     setSprintHistory((prev) => [...prev, { sprint: currentSprint, metrics }]);
     setPhase("results");
@@ -160,20 +162,32 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
   const handleAdvanceToNextSprint = () => {
     if (!sprintMetrics) return;
 
-    // Not delivered items go back to backlog
-    const notDelivered = sprintMetrics.notDeliveredIds;
-    // Items that were in backlog or out stay, delivered items are removed
     const delivered = new Set(sprintMetrics.deliveredIds);
+    const notDelivered = sprintMetrics.notDeliveredIds;
 
+    // Remaining backlog items (not delivered)
     const remainingBacklog = columns.backlog.filter((id) => !delivered.has(id));
-    const remainingOut = columns.out.filter((id) => !delivered.has(id));
+    
+    // "Out" items come BACK to backlog (simulating real PO life)
+    const outItems = columns.out.filter((id) => !delivered.has(id));
 
-    // Not delivered items return to backlog
-    const newBacklog = [...remainingBacklog, ...notDelivered];
-    const availableItems = newBacklog.length + remainingOut.length;
+    // Get incoming new items for this sprint transition
+    const incomingIndex = currentSprint - 1; // after sprint 1 → index 0
+    const incomingItems = scenario.incomingItems?.[incomingIndex] ?? [];
+
+    // Add incoming items to allItems
+    if (incomingItems.length > 0) {
+      setAllItems((prev) => [...prev, ...incomingItems]);
+      setNewItemsAnnouncement(incomingItems);
+    } else {
+      setNewItemsAnnouncement([]);
+    }
+
+    // Merge: not delivered + remaining backlog + out items + new incoming
+    const newBacklog = [...remainingBacklog, ...notDelivered, ...outItems, ...incomingItems.map((i) => i.id)];
+    const availableItems = newBacklog.length;
 
     if (availableItems === 0) {
-      // All done - nothing left to plan
       setPhase("feedback");
       return;
     }
@@ -181,7 +195,7 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
     setColumns({
       backlog: newBacklog,
       sprint: [],
-      out: remainingOut,
+      out: [],
     });
 
     setCurrentSprint((prev) => prev + 1);
@@ -197,6 +211,8 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
       sprint: [],
       out: [],
     });
+    setAllItems(scenario.items);
+    setNewItemsAnnouncement([]);
     setSubmitted(false);
     setScore(0);
     setCurrentSprint(1);
@@ -354,9 +370,26 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
         <p className="text-sm text-muted-foreground leading-relaxed mb-2">{scenario.context}</p>
         <Card className="bg-secondary/50 border-border p-3">
           <p className="text-xs text-secondary-foreground font-mono">
-            ⚠️ {currentSprint === 1 ? scenario.constraint : `Baseado na velocity da sprint anterior (${sprintCapacity} pts), planeje a Sprint ${currentSprint}. Itens não entregues voltaram ao backlog.`}
+            ⚠️ {currentSprint === 1 ? scenario.constraint : `Baseado na velocity da sprint anterior (${sprintCapacity} pts), planeje a Sprint ${currentSprint}. Itens não entregues e descartados voltaram ao backlog.`}
           </p>
         </Card>
+
+        {/* New items announcement */}
+        {newItemsAnnouncement.length > 0 && currentSprint > 1 && (
+          <Card className="bg-warning/10 border-warning/30 p-3 mt-2">
+            <p className="text-xs font-semibold text-warning mb-2">🆕 Novos itens chegaram ao backlog!</p>
+            <p className="text-xs text-muted-foreground mb-2">
+              Como no dia a dia real de um P.O., novas demandas surgiram entre as sprints. Avalie a prioridade desses novos itens junto com os existentes.
+            </p>
+            <ul className="space-y-1">
+              {newItemsAnnouncement.map((item) => (
+                <li key={item.id} className="text-xs text-foreground/80 pl-3 border-l-2 border-warning/30">
+                  <strong>{item.title}</strong> — {item.description}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
 
         {/* Show previous sprint metrics as context */}
         {sprintHistory.length > 0 && (

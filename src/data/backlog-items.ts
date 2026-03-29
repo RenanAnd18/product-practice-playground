@@ -15,6 +15,7 @@ export interface BacklogScenario {
   constraint: string;
   sprintCapacity: string;
   items: BacklogItem[];
+  incomingItems: BacklogItem[][]; // items that arrive after each sprint (index 0 = after sprint 1)
   optimalOrder: string[];
   explanation: string[];
 }
@@ -99,6 +100,57 @@ export const backlogScenarios: BacklogScenario[] = [
         stakeholder: "Head de Marketing",
         details: "Concorrente lançou há 2 meses. Sem dados de impacto ainda.",
       },
+    ],
+    incomingItems: [
+      [
+        {
+          id: "bs1-new1",
+          title: "Bug: Cálculo de frete incorreto para região Norte",
+          description: "Frete calculado 3x acima do real para estados do Norte. Clientes abandonam carrinho.",
+          type: "bug",
+          effort: "M",
+          stakeholder: "Suporte",
+          details: "45 tickets nos últimos 3 dias. Região Norte representa 8% das vendas.",
+        },
+        {
+          id: "bs1-new2",
+          title: "Feature: Banner promocional dinâmico na home",
+          description: "CEO quer banner animado para Black Friday com countdown timer.",
+          type: "feature",
+          effort: "P",
+          stakeholder: "Head de Marketing",
+          details: "Solicitação urgente do marketing para campanha que começa em 5 dias.",
+        },
+      ],
+      [
+        {
+          id: "bs1-new3",
+          title: "Bug: Estoque não atualiza em tempo real",
+          description: "Clientes compram produtos esgotados, gerando cancelamentos e frustração.",
+          type: "bug",
+          effort: "G",
+          stakeholder: "Operações",
+          details: "12 cancelamentos por dia. NPS caiu 15 pontos no último mês.",
+        },
+        {
+          id: "bs1-new4",
+          title: "Feature: Avaliações de produtos com fotos",
+          description: "Permitir que clientes enviem fotos nas avaliações de produtos.",
+          type: "feature",
+          effort: "M",
+          stakeholder: "Head de Produto",
+          details: "Pesquisa mostra que 72% dos usuários confiam mais em reviews com fotos.",
+        },
+        {
+          id: "bs1-new5",
+          title: "Tech Debt: Cache de catálogo expira incorretamente",
+          description: "Produtos atualizados demoram até 6h para aparecer no site.",
+          type: "tech-debt",
+          effort: "P",
+          stakeholder: "Tech Lead",
+          details: "Impacta diretamente campanhas de preço da Black Friday.",
+        },
+      ],
     ],
     optimalOrder: ["bs1-5", "bs1-1", "bs1-4", "bs1-7"],
     explanation: [
@@ -188,6 +240,57 @@ export const backlogScenarios: BacklogScenario[] = [
         stakeholder: "Head de Vendas",
         details: "3 deals de R$50k/mês bloqueados por falta de SSO. Requisito de compliance.",
       },
+    ],
+    incomingItems: [
+      [
+        {
+          id: "bs2-new1",
+          title: "Bug: Exportação de relatório gera PDF em branco",
+          description: "Clientes enterprise não conseguem exportar relatórios para apresentações.",
+          type: "bug",
+          effort: "M",
+          stakeholder: "CS Manager",
+          details: "5 clientes enterprise (R$30k MRR total) escalaram o problema esta semana.",
+        },
+        {
+          id: "bs2-new2",
+          title: "Feature: Automação de tarefas recorrentes",
+          description: "Criar tarefas automaticamente em intervalos definidos (diário, semanal).",
+          type: "feature",
+          effort: "G",
+          stakeholder: "Head de Produto",
+          details: "Feature mais votada no roadmap público. 200+ votos de clientes ativos.",
+        },
+      ],
+      [
+        {
+          id: "bs2-new3",
+          title: "Bug: Busca não encontra tarefas arquivadas",
+          description: "Clientes perdem acesso a tarefas antigas quando tentam buscar.",
+          type: "bug",
+          effort: "P",
+          stakeholder: "Suporte",
+          details: "30 tickets/semana. Workaround: navegar manualmente por projetos arquivados.",
+        },
+        {
+          id: "bs2-new4",
+          title: "Feature: Modo escuro",
+          description: "Tema dark para o produto, solicitado por muitos usuários.",
+          type: "feature",
+          effort: "M",
+          stakeholder: "Comunidade",
+          details: "120 pedidos no feedback board. Não impacta churn diretamente mas melhora satisfação.",
+        },
+        {
+          id: "bs2-new5",
+          title: "Tech Debt: Migrar de REST para GraphQL nas APIs críticas",
+          description: "APIs de listagem são lentas por over-fetching de dados.",
+          type: "tech-debt",
+          effort: "GG",
+          stakeholder: "Tech Lead",
+          details: "Tempo de carregamento de projetos: 4.2s (meta: <1s). Impacta percepção de qualidade.",
+        },
+      ],
     ],
     optimalOrder: ["bs2-7", "bs2-2", "bs2-3", "bs2-5"],
     explanation: [
