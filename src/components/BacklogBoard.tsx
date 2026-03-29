@@ -370,9 +370,26 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
         <p className="text-sm text-muted-foreground leading-relaxed mb-2">{scenario.context}</p>
         <Card className="bg-secondary/50 border-border p-3">
           <p className="text-xs text-secondary-foreground font-mono">
-            ⚠️ {currentSprint === 1 ? scenario.constraint : `Baseado na velocity da sprint anterior (${sprintCapacity} pts), planeje a Sprint ${currentSprint}. Itens não entregues voltaram ao backlog.`}
+            ⚠️ {currentSprint === 1 ? scenario.constraint : `Baseado na velocity da sprint anterior (${sprintCapacity} pts), planeje a Sprint ${currentSprint}. Itens não entregues e descartados voltaram ao backlog.`}
           </p>
         </Card>
+
+        {/* New items announcement */}
+        {newItemsAnnouncement.length > 0 && currentSprint > 1 && (
+          <Card className="bg-warning/10 border-warning/30 p-3 mt-2">
+            <p className="text-xs font-semibold text-warning mb-2">🆕 Novos itens chegaram ao backlog!</p>
+            <p className="text-xs text-muted-foreground mb-2">
+              Como no dia a dia real de um P.O., novas demandas surgiram entre as sprints. Avalie a prioridade desses novos itens junto com os existentes.
+            </p>
+            <ul className="space-y-1">
+              {newItemsAnnouncement.map((item) => (
+                <li key={item.id} className="text-xs text-foreground/80 pl-3 border-l-2 border-warning/30">
+                  <strong>{item.title}</strong> — {item.description}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
 
         {/* Show previous sprint metrics as context */}
         {sprintHistory.length > 0 && (
