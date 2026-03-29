@@ -144,24 +144,10 @@ const SprintResults = ({ sprintNumber, sprintItems, metrics, onAdvance }: Sprint
         />
       </div>
 
-      {/* Explanation */}
-      <Card className="p-4 bg-secondary/30 border-border">
-        <h4 className="font-display text-sm font-semibold text-foreground mb-2">📊 O que essas métricas significam?</h4>
-        <ul className="space-y-2 text-xs text-muted-foreground leading-relaxed">
-          <li>
-            <strong className="text-foreground">Velocity ({metrics.velocity} pts):</strong> É a soma dos pontos de esforço dos itens que o time conseguiu entregar. Use esse número para planejar o próximo sprint de forma mais realista.
-          </li>
-          <li>
-            <strong className="text-foreground">Throughput ({metrics.throughput} itens):</strong> Quantidade de itens que cruzaram a linha de chegada. Ajuda a entender a capacidade real do time independente do tamanho dos itens.
-          </li>
-          <li>
-            <strong className="text-foreground">Lead Time ({metrics.leadTimeDays} dias):</strong> Tempo total desde que o item foi priorizado até ser entregue. Quanto menor, mais rápido o time transforma ideias em valor.
-          </li>
-          <li>
-            <strong className="text-foreground">Cycle Time ({metrics.cycleTimeDays} dias):</strong> Tempo que o time levou efetivamente trabalhando no item. Se for muito maior que o Lead Time, pode indicar gargalos no processo.
-          </li>
-        </ul>
-      </Card>
+      {/* Hint */}
+      <p className="text-xs text-center text-muted-foreground italic">
+        👆 Clique em cada métrica para ver análise e dicas para a próxima sprint
+      </p>
 
       {/* Delivered / Not Delivered */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
