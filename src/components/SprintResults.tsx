@@ -228,21 +228,51 @@ const MetricCard = ({
   value,
   description,
   color,
+  isExpanded,
+  onToggle,
+  analysis,
 }: {
+  metricKey: string;
   icon: React.ReactNode;
   label: string;
   value: string;
   description: string;
   color: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  analysis: { analysis: string; tips: string[] };
 }) => (
-  <Card className="p-3 border-border">
-    <div className={`flex items-center gap-2 mb-1 ${color}`}>
-      {icon}
-      <span className="text-xs font-semibold uppercase tracking-wider">{label}</span>
-    </div>
-    <div className="text-xl font-display font-bold text-foreground">{value}</div>
-    <p className="text-[10px] text-muted-foreground mt-0.5">{description}</p>
-  </Card>
+  <div className="col-span-1">
+    <Card
+      className={`p-3 border-border cursor-pointer transition-all hover:border-primary/40 hover:shadow-md ${isExpanded ? 'ring-1 ring-primary/30 border-primary/40' : ''}`}
+      onClick={onToggle}
+    >
+      <div className={`flex items-center gap-2 mb-1 ${color}`}>
+        {icon}
+        <span className="text-xs font-semibold uppercase tracking-wider">{label}</span>
+        <ChevronDown className={`w-3 h-3 ml-auto transition-transform text-muted-foreground ${isExpanded ? 'rotate-180' : ''}`} />
+      </div>
+      <div className="text-xl font-display font-bold text-foreground">{value}</div>
+      <p className="text-[10px] text-muted-foreground mt-0.5">{description}</p>
+    </Card>
+    {isExpanded && (
+      <Card className="mt-2 p-3 border-primary/20 bg-primary/5 col-span-full">
+        <div className="flex items-start gap-2 mb-2">
+          <Lightbulb className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+          <p className="text-sm text-foreground/90">{analysis.analysis}</p>
+        </div>
+        <div className="space-y-1.5 mt-3">
+          <h5 className="text-xs font-semibold text-foreground flex items-center gap-1">💡 Dicas para a próxima sprint:</h5>
+          {analysis.tips.map((tip, i) => (
+            <p key={i} className="text-xs text-muted-foreground pl-4 flex items-start gap-1.5">
+              <span className="text-primary shrink-0">•</span>
+              {tip}
+            </p>
+          ))}
+        </div>
+      </Card>
+    )}
+  </div>
 );
 
 export default SprintResults;
