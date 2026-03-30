@@ -79,7 +79,7 @@ const getMetricAnalysis = (metric: string, metrics: SprintMetrics, sprintNumber:
   return analyses[metric] || { analysis: "", tips: [] };
 };
 
-const SprintResults = ({ sprintNumber, sprintItems, metrics, onAdvance }: SprintResultsProps) => {
+const SprintResults = ({ sprintNumber, sprintItems, metrics, onAdvance, isLastSprint = false, maxSprints = 5 }: SprintResultsProps) => {
   const [expandedMetric, setExpandedMetric] = useState<string | null>(null);
 
   const toggleMetric = (metric: string) => {
