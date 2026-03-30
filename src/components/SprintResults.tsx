@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle2, XCircle, ArrowRight, BarChart3, Clock, Zap, TrendingUp, Lightbulb, ChevronDown } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight, BarChart3, Clock, Zap, TrendingUp, Lightbulb, ChevronDown, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
