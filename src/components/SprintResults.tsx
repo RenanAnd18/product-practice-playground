@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle2, XCircle, ArrowRight, BarChart3, Clock, Zap, TrendingUp, Lightbulb, ChevronDown } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight, BarChart3, Clock, Zap, TrendingUp, Lightbulb, ChevronDown, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,8 @@ interface SprintResultsProps {
   sprintItems: BacklogItem[];
   metrics: SprintMetrics;
   onAdvance: () => void;
+  isLastSprint?: boolean;
+  maxSprints?: number;
 }
 
 const getMetricAnalysis = (metric: string, metrics: SprintMetrics, sprintNumber: number) => {
@@ -77,7 +79,7 @@ const getMetricAnalysis = (metric: string, metrics: SprintMetrics, sprintNumber:
   return analyses[metric] || { analysis: "", tips: [] };
 };
 
-const SprintResults = ({ sprintNumber, sprintItems, metrics, onAdvance }: SprintResultsProps) => {
+const SprintResults = ({ sprintNumber, sprintItems, metrics, onAdvance, isLastSprint = false, maxSprints = 5 }: SprintResultsProps) => {
   const [expandedMetric, setExpandedMetric] = useState<string | null>(null);
 
   const toggleMetric = (metric: string) => {
@@ -201,8 +203,17 @@ const SprintResults = ({ sprintNumber, sprintItems, metrics, onAdvance }: Sprint
 
       {/* Advance */}
       <Button onClick={onAdvance} className="w-full" size="lg">
-        Avançar para Sprint {sprintNumber + 1}
-        <ArrowRight className="w-4 h-4 ml-2" />
+        {isLastSprint ? (
+          <>
+            <FileText className="w-4 h-4 mr-2" />
+            Ver Relatório de Desempenho
+          </>
+        ) : (
+          <>
+            Avançar para Sprint {sprintNumber + 1} de {maxSprints}
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </>
+        )}
       </Button>
     </div>
   );

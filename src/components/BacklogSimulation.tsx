@@ -23,9 +23,14 @@ const BacklogSimulation = () => {
             Simulação de Priorização
           </h2>
         </div>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-sm mb-3">
           Arraste itens do backlog para o sprint. Você tem capacidade limitada — priorize pelo maior impacto.
         </p>
+        <Card className="p-3 border-primary/20 bg-primary/5">
+          <p className="text-xs text-foreground/80">
+            📋 <strong>Como funciona:</strong> Você será avaliado ao longo de <strong>5 sprints</strong>. Ao final, será gerado um <strong>relatório de desempenho</strong> com nota, métricas e recomendações — como se fosse entregue ao seu gestor. Priorize com estratégia!
+          </p>
+        </Card>
       </div>
 
       <div className="grid gap-4">
