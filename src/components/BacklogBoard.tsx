@@ -124,7 +124,9 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
           const i = itemMap.get(id);
           return sum + (i ? effortValues[i.effort] : 0);
         }, 0);
-      if (currentLoad + effortValues[item.effort] > sprintCapacity) return;
+      // Allow exceeding capacity when capacity is too low for any item
+      const effectiveCapacity = capacityTooLow ? Math.max(sprintCapacity, effortValues[item.effort]) : sprintCapacity;
+      if (currentLoad + effortValues[item.effort] > effectiveCapacity) return;
     }
 
     setColumns((prev) => {
