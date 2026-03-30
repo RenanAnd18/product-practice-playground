@@ -510,9 +510,21 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
       </button>
 
       <div className="mb-6">
+        {/* Sprint progress indicator */}
+        <div className="flex items-center gap-2 mb-4">
+          {Array.from({ length: MAX_SPRINTS }, (_, i) => (
+            <div key={i} className="flex items-center gap-1 flex-1">
+              <div className={`h-2 rounded-full flex-1 transition-all ${
+                i + 1 < currentSprint ? "bg-success" : i + 1 === currentSprint ? "bg-primary" : "bg-secondary"
+              }`} />
+            </div>
+          ))}
+          <span className="text-xs font-mono text-muted-foreground shrink-0 ml-1">{currentSprint}/{MAX_SPRINTS}</span>
+        </div>
+
         <div className="flex items-center gap-3 mb-2">
           <h2 className="font-display text-xl font-bold text-foreground">{scenario.title}</h2>
-          <Badge variant="outline" className="border-primary/30 text-primary">Sprint {currentSprint}</Badge>
+          <Badge variant="outline" className="border-primary/30 text-primary">Sprint {currentSprint} de {MAX_SPRINTS}</Badge>
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed mb-2">{scenario.context}</p>
         <Card className="bg-secondary/50 border-border p-3">
