@@ -21,6 +21,8 @@ interface SprintResultsProps {
   sprintItems: BacklogItem[];
   metrics: SprintMetrics;
   onAdvance: () => void;
+  isLastSprint?: boolean;
+  maxSprints?: number;
 }
 
 const getMetricAnalysis = (metric: string, metrics: SprintMetrics, sprintNumber: number) => {

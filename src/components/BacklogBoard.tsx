@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { ArrowLeft, CheckCircle2, AlertTriangle, Package, Search, Wrench, GripVertical } from "lucide-react";
+import { ArrowLeft, CheckCircle2, AlertTriangle, Package, Search, Wrench, GripVertical, Trophy, TrendingUp, TrendingDown, Minus, FileText, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,8 @@ interface BacklogBoardProps {
 
 type Column = "backlog" | "sprint" | "out";
 type Phase = "planning" | "results" | "feedback";
+
+const MAX_SPRINTS = 5;
 
 const typeConfig = {
   bug: { icon: AlertTriangle, label: "Bug", className: "bg-destructive/20 text-destructive border-destructive/30" },
@@ -194,8 +196,14 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
 
     // Merge: not delivered + remaining backlog + out items + new incoming
     const newBacklog = [...remainingBacklog, ...notDelivered, ...outItems, ...incomingItems.map((i) => i.id)];
-    const availableItems = newBacklog.length;
 
+    // End after MAX_SPRINTS
+    if (currentSprint >= MAX_SPRINTS) {
+      setPhase("feedback");
+      return;
+    }
+
+    const availableItems = newBacklog.length;
     if (availableItems === 0) {
       setPhase("feedback");
       return;
