@@ -411,6 +411,26 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
             </p>
           </Card>
         )}
+
+        {/* Low capacity warning */}
+        {capacityTooLow && (
+          <Card className="bg-destructive/10 border-destructive/30 p-3 mt-2">
+            <p className="text-xs font-semibold text-destructive mb-1">⚠️ Capacidade insuficiente para os itens disponíveis!</p>
+            <p className="text-xs text-muted-foreground mb-2">
+              A velocity da sprint anterior foi de apenas <strong>{rawCapacity} pts</strong>, mas o menor item do backlog exige <strong>{smallestBacklogEffort} pts</strong>. 
+              Em uma situação real, o P.O. deveria:
+            </p>
+            <ul className="text-xs text-muted-foreground space-y-1 ml-3 list-disc">
+              <li><strong>Quebrar tarefas grandes</strong> em sub-tarefas menores e mais gerenciáveis</li>
+              <li><strong>Investigar impedimentos</strong> que reduziram a velocity do time</li>
+              <li><strong>Conversar com o time</strong> sobre a capacidade real para esta sprint</li>
+              <li><strong>Renegociar escopo</strong> com stakeholders se necessário</li>
+            </ul>
+            <p className="text-xs text-info mt-2 font-medium">
+              💡 Para continuar a simulação, você pode arrastar um item mesmo acima da capacidade. Na prática, converse com o time antes de assumir compromissos.
+            </p>
+          </Card>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
