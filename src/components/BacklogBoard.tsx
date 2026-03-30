@@ -315,49 +315,182 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
           sprintItems={sprintItems}
           metrics={sprintMetrics}
           onAdvance={handleAdvanceToNextSprint}
+          isLastSprint={currentSprint >= MAX_SPRINTS}
+          maxSprints={MAX_SPRINTS}
         />
       </div>
     );
   }
 
-  // All done phase
+  // All done phase — Performance Report
   if (phase === "feedback") {
     const totalDelivered = sprintHistory.reduce((sum, h) => sum + h.metrics.throughput, 0);
+    const totalNotDelivered = sprintHistory.reduce((sum, h) => sum + h.metrics.notDeliveredIds.length, 0);
     const avgVelocity = sprintHistory.length > 0
-      ? (sprintHistory.reduce((sum, h) => sum + h.metrics.velocity, 0) / sprintHistory.length).toFixed(1)
-      : "0";
+      ? (sprintHistory.reduce((sum, h) => sum + h.metrics.velocity, 0) / sprintHistory.length)
+      : 0;
+    const avgThroughput = sprintHistory.length > 0
+      ? (totalDelivered / sprintHistory.length)
+      : 0;
+    const avgLeadTime = sprintHistory.length > 0
+      ? (sprintHistory.reduce((sum, h) => sum + h.metrics.leadTimeDays, 0) / sprintHistory.length)
+      : 0;
+    const avgCycleTime = sprintHistory.length > 0
+      ? (sprintHistory.reduce((sum, h) => sum + h.metrics.cycleTimeDays, 0) / sprintHistory.length)
+      : 0;
+    const deliveryRate = sprintHistory.length > 0
+      ? ((totalDelivered / (totalDelivered + totalNotDelivered)) * 100)
+      : 0;
+
+    // Velocity trend
+    const velocityTrend = sprintHistory.length >= 2
+      ? sprintHistory[sprintHistory.length - 1].metrics.velocity - sprintHistory[0].metrics.velocity
+      : 0;
+
+    // Overall grade
+    const gradeScore = Math.min(100, Math.round(
+      (deliveryRate * 0.4) +
+      (Math.min(avgVelocity / 5, 1) * 30) +
+      (Math.max(0, 1 - avgCycleTime / 10) * 30)
+    ));
+    const grade = gradeScore >= 85 ? "A" : gradeScore >= 70 ? "B" : gradeScore >= 50 ? "C" : "D";
+    const gradeColor = gradeScore >= 85 ? "text-success" : gradeScore >= 70 ? "text-primary" : gradeScore >= 50 ? "text-warning" : "text-destructive";
+    const gradeBg = gradeScore >= 85 ? "bg-success/10 border-success/30" : gradeScore >= 70 ? "bg-primary/10 border-primary/30" : gradeScore >= 50 ? "bg-warning/10 border-warning/30" : "bg-destructive/10 border-destructive/30";
 
     return (
-      <div className="max-w-2xl mx-auto px-4 py-12 text-center">
-        <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
-          <CheckCircle2 className="w-8 h-8 text-success" />
-        </div>
-        <h2 className="font-display text-2xl font-bold text-foreground mb-2">
-          Backlog concluído! 🎉
-        </h2>
-        <p className="text-muted-foreground mb-6">
-          Você completou {sprintHistory.length} sprints e entregou {totalDelivered} itens com velocity média de {avgVelocity} pontos.
-        </p>
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6 font-mono text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Voltar
+        </button>
 
+        {/* Report Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <FileText className="w-6 h-6 text-primary" />
+            <h2 className="font-display text-2xl font-bold text-foreground">
+              Relatório de Desempenho do P.O.
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Avaliação após {sprintHistory.length} sprints · {scenario.title}
+          </p>
+        </div>
+
+        {/* Grade Card */}
+        <Card className={`p-6 mb-6 border ${gradeBg} text-center`}>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Nota Geral</p>
+          <div className={`text-6xl font-display font-black ${gradeColor}`}>{grade}</div>
+          <p className={`text-lg font-semibold ${gradeColor} mt-1`}>{gradeScore}/100 pontos</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            {gradeScore >= 85
+              ? "Excelente gestão! Você demonstrou domínio na priorização e entrega de valor."
+              : gradeScore >= 70
+              ? "Bom trabalho! Há espaço para melhorias na consistência das entregas."
+              : gradeScore >= 50
+              ? "Desempenho mediano. Foque em melhorar a previsibilidade e priorização."
+              : "Desempenho abaixo do esperado. Revise suas estratégias de priorização."}
+          </p>
+        </Card>
+
+        {/* KPI Summary */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          <Card className="p-4 border-border text-center">
+            <p className="text-xs text-muted-foreground mb-1">Velocity Média</p>
+            <p className="text-xl font-display font-bold text-foreground">{avgVelocity.toFixed(1)}</p>
+            <div className="flex items-center justify-center gap-1 mt-1">
+              {velocityTrend > 0 ? <TrendingUp className="w-3 h-3 text-success" /> : velocityTrend < 0 ? <TrendingDown className="w-3 h-3 text-destructive" /> : <Minus className="w-3 h-3 text-muted-foreground" />}
+              <span className={`text-[10px] ${velocityTrend > 0 ? "text-success" : velocityTrend < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                {velocityTrend > 0 ? "Crescente" : velocityTrend < 0 ? "Decrescente" : "Estável"}
+              </span>
+            </div>
+          </Card>
+          <Card className="p-4 border-border text-center">
+            <p className="text-xs text-muted-foreground mb-1">Throughput Médio</p>
+            <p className="text-xl font-display font-bold text-foreground">{avgThroughput.toFixed(1)}</p>
+            <p className="text-[10px] text-muted-foreground">itens/sprint</p>
+          </Card>
+          <Card className="p-4 border-border text-center">
+            <p className="text-xs text-muted-foreground mb-1">Lead Time Médio</p>
+            <p className="text-xl font-display font-bold text-foreground">{avgLeadTime.toFixed(1)}</p>
+            <p className="text-[10px] text-muted-foreground">dias</p>
+          </Card>
+          <Card className="p-4 border-border text-center">
+            <p className="text-xs text-muted-foreground mb-1">Taxa de Entrega</p>
+            <p className="text-xl font-display font-bold text-foreground">{deliveryRate.toFixed(0)}%</p>
+            <p className="text-[10px] text-muted-foreground">{totalDelivered} de {totalDelivered + totalNotDelivered}</p>
+          </Card>
+        </div>
+
+        {/* Sprint by Sprint */}
         <Card className="p-5 border-border mb-6">
-          <h3 className="font-display font-semibold text-foreground mb-3 text-sm">Resumo por Sprint</h3>
+          <h3 className="font-display font-semibold text-foreground mb-3 text-sm flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-primary" />
+            Desempenho por Sprint
+          </h3>
           <div className="space-y-2">
             {sprintHistory.map((h) => (
-              <div key={h.sprint} className="flex items-center justify-between text-sm py-1.5 border-b border-border last:border-0">
-                <span className="text-foreground">Sprint {h.sprint}</span>
-                <div className="flex gap-4 text-xs text-muted-foreground">
-                  <span>Velocity: <strong className="text-foreground">{h.metrics.velocity}</strong></span>
-                  <span>Entregues: <strong className="text-foreground">{h.metrics.throughput}</strong></span>
-                  <span>Cycle Time: <strong className="text-foreground">{h.metrics.cycleTimeDays}d</strong></span>
+              <div key={h.sprint} className="py-2 border-b border-border last:border-0">
+                <div className="flex items-center justify-between text-sm mb-1">
+                  <span className="text-foreground font-medium">Sprint {h.sprint}</span>
+                  <div className="flex gap-4 text-xs text-muted-foreground">
+                    <span>Velocity: <strong className="text-foreground">{h.metrics.velocity}</strong></span>
+                    <span>Entregues: <strong className="text-foreground">{h.metrics.throughput}</strong></span>
+                    <span>Não entregues: <strong className="text-destructive">{h.metrics.notDeliveredIds.length}</strong></span>
+                  </div>
+                </div>
+                <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full"
+                    style={{ width: `${Math.min((h.metrics.velocity / (avgVelocity * 2)) * 100, 100)}%` }}
+                  />
                 </div>
               </div>
             ))}
           </div>
         </Card>
 
-        <Button onClick={handleReset} className="w-full">
-          Refazer simulação
-        </Button>
+        {/* Recommendations */}
+        <Card className="p-5 border-primary/20 bg-primary/5 mb-6">
+          <h3 className="font-display font-semibold text-foreground mb-3 text-sm flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-primary" />
+            Recomendações para o Gestor
+          </h3>
+          <div className="space-y-2 text-sm text-foreground/80">
+            {deliveryRate >= 80 ? (
+              <p className="pl-3 border-l-2 border-success/30">✅ Alta taxa de entrega ({deliveryRate.toFixed(0)}%). O P.O. demonstra boa capacidade de planejar dentro da capacidade do time.</p>
+            ) : (
+              <p className="pl-3 border-l-2 border-warning/30">⚠️ Taxa de entrega de {deliveryRate.toFixed(0)}%. Recomenda-se trabalhar melhor o refinamento e estimativa dos itens.</p>
+            )}
+            {velocityTrend > 0 ? (
+              <p className="pl-3 border-l-2 border-success/30">✅ Velocity em tendência de crescimento, indicando melhoria contínua do time.</p>
+            ) : velocityTrend < 0 ? (
+              <p className="pl-3 border-l-2 border-destructive/30">🔴 Velocity em queda. Investigar impedimentos, rotatividade ou débito técnico acumulado.</p>
+            ) : (
+              <p className="pl-3 border-l-2 border-primary/30">ℹ️ Velocity estável. O time está em um ritmo consistente.</p>
+            )}
+            {avgCycleTime <= 4 ? (
+              <p className="pl-3 border-l-2 border-success/30">✅ Cycle Time saudável ({avgCycleTime.toFixed(1)} dias). Os itens estão fluindo bem pelo processo.</p>
+            ) : (
+              <p className="pl-3 border-l-2 border-warning/30">⚠️ Cycle Time elevado ({avgCycleTime.toFixed(1)} dias). Considere quebrar itens grandes e reduzir WIP.</p>
+            )}
+          </div>
+        </Card>
+
+        <div className="flex gap-3">
+          <Button onClick={handleReset} variant="outline" className="flex-1">
+            Refazer simulação
+          </Button>
+          <Button onClick={onBack} className="flex-1">
+            Voltar ao menu
+          </Button>
+        </div>
+      </div>
+    );
+  }
       </div>
     );
   }
