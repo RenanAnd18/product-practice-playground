@@ -88,10 +88,17 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
     }, 0);
   }, [columns.sprint, itemMap]);
 
-  // Use previous velocity as capacity hint for sprint 2+
-  const sprintCapacity = currentSprint === 1
+  // Use previous velocity as capacity hint for sprint 2+, minimum floor of 1
+  const rawCapacity = currentSprint === 1
     ? 5
     : (sprintHistory.length > 0 ? sprintHistory[sprintHistory.length - 1].metrics.velocity : 5);
+  const sprintCapacity = Math.max(rawCapacity, 1);
+
+  // Check if all backlog items are larger than capacity
+  const smallestBacklogEffort = columns.backlog.length > 0
+    ? Math.min(...columns.backlog.map((id) => { const item = itemMap.get(id); return item ? effortValues[item.effort] : Infinity; }))
+    : 0;
+  const capacityTooLow = currentSprint > 1 && sprintCapacity < smallestBacklogEffort && columns.backlog.length > 0;
 
   const handleDragStart = (e: React.DragEvent, itemId: string) => {
     setDraggedItem(itemId);
