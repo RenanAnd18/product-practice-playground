@@ -88,10 +88,17 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
     }, 0);
   }, [columns.sprint, itemMap]);
 
-  // Use previous velocity as capacity hint for sprint 2+
-  const sprintCapacity = currentSprint === 1
+  // Use previous velocity as capacity hint for sprint 2+, minimum floor of 1
+  const rawCapacity = currentSprint === 1
     ? 5
     : (sprintHistory.length > 0 ? sprintHistory[sprintHistory.length - 1].metrics.velocity : 5);
+  const sprintCapacity = Math.max(rawCapacity, 1);
+
+  // Check if all backlog items are larger than capacity
+  const smallestBacklogEffort = columns.backlog.length > 0
+    ? Math.min(...columns.backlog.map((id) => { const item = itemMap.get(id); return item ? effortValues[item.effort] : Infinity; }))
+    : 0;
+  const capacityTooLow = currentSprint > 1 && sprintCapacity < smallestBacklogEffort && columns.backlog.length > 0;
 
   const handleDragStart = (e: React.DragEvent, itemId: string) => {
     setDraggedItem(itemId);
@@ -117,7 +124,9 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
           const i = itemMap.get(id);
           return sum + (i ? effortValues[i.effort] : 0);
         }, 0);
-      if (currentLoad + effortValues[item.effort] > sprintCapacity) return;
+      // Allow exceeding capacity when capacity is too low for any item
+      const effectiveCapacity = capacityTooLow ? Math.max(sprintCapacity, effortValues[item.effort]) : sprintCapacity;
+      if (currentLoad + effortValues[item.effort] > effectiveCapacity) return;
     }
 
     setColumns((prev) => {
@@ -399,6 +408,26 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
               Velocity: <strong>{sprintHistory[sprintHistory.length - 1].metrics.velocity} pts</strong> · 
               Throughput: <strong>{sprintHistory[sprintHistory.length - 1].metrics.throughput} itens</strong> · 
               Cycle Time: <strong>{sprintHistory[sprintHistory.length - 1].metrics.cycleTimeDays} dias</strong>
+            </p>
+          </Card>
+        )}
+
+        {/* Low capacity warning */}
+        {capacityTooLow && (
+          <Card className="bg-destructive/10 border-destructive/30 p-3 mt-2">
+            <p className="text-xs font-semibold text-destructive mb-1">⚠️ Capacidade insuficiente para os itens disponíveis!</p>
+            <p className="text-xs text-muted-foreground mb-2">
+              A velocity da sprint anterior foi de apenas <strong>{rawCapacity} pts</strong>, mas o menor item do backlog exige <strong>{smallestBacklogEffort} pts</strong>. 
+              Em uma situação real, o P.O. deveria:
+            </p>
+            <ul className="text-xs text-muted-foreground space-y-1 ml-3 list-disc">
+              <li><strong>Quebrar tarefas grandes</strong> em sub-tarefas menores e mais gerenciáveis</li>
+              <li><strong>Investigar impedimentos</strong> que reduziram a velocity do time</li>
+              <li><strong>Conversar com o time</strong> sobre a capacidade real para esta sprint</li>
+              <li><strong>Renegociar escopo</strong> com stakeholders se necessário</li>
+            </ul>
+            <p className="text-xs text-info mt-2 font-medium">
+              💡 Para continuar a simulação, você pode arrastar um item mesmo acima da capacidade. Na prática, converse com o time antes de assumir compromissos.
             </p>
           </Card>
         )}
