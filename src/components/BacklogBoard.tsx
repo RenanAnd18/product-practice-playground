@@ -491,9 +491,6 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
       </div>
     );
   }
-      </div>
-    );
-  }
 
   // Planning phase
   const columnConfig = [
