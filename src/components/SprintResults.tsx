@@ -203,8 +203,17 @@ const SprintResults = ({ sprintNumber, sprintItems, metrics, onAdvance }: Sprint
 
       {/* Advance */}
       <Button onClick={onAdvance} className="w-full" size="lg">
-        Avançar para Sprint {sprintNumber + 1}
-        <ArrowRight className="w-4 h-4 ml-2" />
+        {isLastSprint ? (
+          <>
+            <FileText className="w-4 h-4 mr-2" />
+            Ver Relatório de Desempenho
+          </>
+        ) : (
+          <>
+            Avançar para Sprint {sprintNumber + 1} de {maxSprints}
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </>
+        )}
       </Button>
     </div>
   );
