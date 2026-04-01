@@ -1,11 +1,12 @@
 import { useState, useCallback } from "react";
-import { ArrowLeft, CheckCircle2, AlertTriangle, Package, Search, Wrench, GripVertical, Trophy, TrendingUp, TrendingDown, Minus, FileText, BarChart3 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, AlertTriangle, Package, Search, Wrench, GripVertical, Trophy, TrendingUp, TrendingDown, Minus, FileText, BarChart3, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import SprintResults from "./SprintResults";
 import type { SprintMetrics } from "./SprintResults";
 import type { BacklogScenario, BacklogItem } from "@/data/backlog-items";
+import { getRandomEvent, type SprintEvent, type EventChoice } from "@/data/sprint-events";
 
 interface BacklogBoardProps {
   scenario: BacklogScenario;
@@ -13,7 +14,7 @@ interface BacklogBoardProps {
 }
 
 type Column = "backlog" | "sprint" | "out";
-type Phase = "planning" | "results" | "feedback";
+type Phase = "planning" | "results" | "event" | "feedback";
 
 const MAX_SPRINTS = 5;
 
@@ -80,7 +81,11 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
   const [sprintHistory, setSprintHistory] = useState<{ sprint: number; metrics: SprintMetrics }[]>([]);
   const [allItems, setAllItems] = useState<BacklogItem[]>(scenario.items);
   const [newItemsAnnouncement, setNewItemsAnnouncement] = useState<BacklogItem[]>([]);
-
+  const [currentEvent, setCurrentEvent] = useState<SprintEvent | null>(null);
+  const [usedEventIds, setUsedEventIds] = useState<string[]>([]);
+  const [eventChoice, setEventChoice] = useState<EventChoice | null>(null);
+  const [capacityModifier, setCapacityModifier] = useState(0);
+  const [eventHistory, setEventHistory] = useState<{ sprint: number; event: SprintEvent; choice: EventChoice }[]>([]);
   const itemMap = new Map(allItems.map((i) => [i.id, i]));
 
   const getSprintLoad = useCallback(() => {
@@ -94,7 +99,7 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
   const rawCapacity = currentSprint === 1
     ? 5
     : (sprintHistory.length > 0 ? sprintHistory[sprintHistory.length - 1].metrics.velocity : 5);
-  const sprintCapacity = Math.max(rawCapacity, 1);
+  const sprintCapacity = Math.max(rawCapacity + capacityModifier, 1);
 
   // Check if all backlog items are larger than capacity
   const smallestBacklogEffort = columns.backlog.length > 0
@@ -173,20 +178,65 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
   const handleAdvanceToNextSprint = () => {
     if (!sprintMetrics) return;
 
+    // End after MAX_SPRINTS
+    if (currentSprint >= MAX_SPRINTS) {
+      setPhase("feedback");
+      return;
+    }
+
+    // Check for random event before transitioning
+    const event = getRandomEvent(currentSprint, usedEventIds);
+    if (event) {
+      setCurrentEvent(event);
+      setUsedEventIds((prev) => [...prev, event.id]);
+      setPhase("event");
+      return;
+    }
+
+    // No event — proceed directly
+    proceedToNextSprint();
+  };
+
+  const handleEventChoice = (choice: EventChoice) => {
+    setEventChoice(choice);
+  };
+
+  const handleEventContinue = () => {
+    if (!eventChoice || !currentEvent) return;
+
+    // Record event in history
+    setEventHistory((prev) => [...prev, { sprint: currentSprint, event: currentEvent, choice: eventChoice }]);
+
+    // Apply capacity modifier
+    if (eventChoice.capacityModifier) {
+      setCapacityModifier(eventChoice.capacityModifier);
+    } else {
+      setCapacityModifier(0);
+    }
+
+    // Inject item if the choice adds one
+    if (eventChoice.injectItem) {
+      const newItem: BacklogItem = eventChoice.injectItem;
+      setAllItems((prev) => [...prev, newItem]);
+    }
+
+    setCurrentEvent(null);
+    setEventChoice(null);
+    proceedToNextSprint(eventChoice.injectItem ? eventChoice.injectItem : undefined);
+  };
+
+  const proceedToNextSprint = (extraItem?: BacklogItem) => {
+    if (!sprintMetrics) return;
+
     const delivered = new Set(sprintMetrics.deliveredIds);
     const notDelivered = sprintMetrics.notDeliveredIds;
 
-    // Remaining backlog items (not delivered)
     const remainingBacklog = columns.backlog.filter((id) => !delivered.has(id));
-    
-    // "Out" items come BACK to backlog (simulating real PO life)
     const outItems = columns.out.filter((id) => !delivered.has(id));
 
-    // Get incoming new items for this sprint transition
-    const incomingIndex = currentSprint - 1; // after sprint 1 → index 0
+    const incomingIndex = currentSprint - 1;
     const incomingItems = scenario.incomingItems?.[incomingIndex] ?? [];
 
-    // Add incoming items to allItems
     if (incomingItems.length > 0) {
       setAllItems((prev) => [...prev, ...incomingItems]);
       setNewItemsAnnouncement(incomingItems);
@@ -194,27 +244,20 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
       setNewItemsAnnouncement([]);
     }
 
-    // Merge: not delivered + remaining backlog + out items + new incoming
-    const newBacklog = [...remainingBacklog, ...notDelivered, ...outItems, ...incomingItems.map((i) => i.id)];
+    const newBacklog = [
+      ...remainingBacklog,
+      ...notDelivered,
+      ...outItems,
+      ...incomingItems.map((i) => i.id),
+      ...(extraItem ? [extraItem.id] : []),
+    ];
 
-    // End after MAX_SPRINTS
-    if (currentSprint >= MAX_SPRINTS) {
+    if (newBacklog.length === 0) {
       setPhase("feedback");
       return;
     }
 
-    const availableItems = newBacklog.length;
-    if (availableItems === 0) {
-      setPhase("feedback");
-      return;
-    }
-
-    setColumns({
-      backlog: newBacklog,
-      sprint: [],
-      out: [],
-    });
-
+    setColumns({ backlog: newBacklog, sprint: [], out: [] });
     setCurrentSprint((prev) => prev + 1);
     setPhase("planning");
     setSubmitted(false);
@@ -236,6 +279,11 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
     setPhase("planning");
     setSprintMetrics(null);
     setSprintHistory([]);
+    setCurrentEvent(null);
+    setUsedEventIds([]);
+    setEventChoice(null);
+    setCapacityModifier(0);
+    setEventHistory([]);
   };
 
   const renderItem = (item: BacklogItem) => {
@@ -318,6 +366,105 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
           isLastSprint={currentSprint >= MAX_SPRINTS}
           maxSprints={MAX_SPRINTS}
         />
+      </div>
+    );
+  }
+
+  // Event phase
+  if (phase === "event" && currentEvent) {
+    const categoryLabels = { stakeholder: "Stakeholder", team: "Time", market: "Mercado", technical: "Técnico" };
+    const categoryColors = {
+      stakeholder: "bg-warning/20 text-warning border-warning/30",
+      team: "bg-info/20 text-info border-info/30",
+      market: "bg-primary/20 text-primary border-primary/30",
+      technical: "bg-destructive/20 text-destructive border-destructive/30",
+    };
+    const impactColors = { positive: "border-success/40 bg-success/5", neutral: "border-primary/40 bg-primary/5", negative: "border-destructive/40 bg-destructive/5" };
+    const impactIcons = { positive: "✅", neutral: "⚠️", negative: "🔴" };
+
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6 font-mono text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Voltar
+        </button>
+
+        {/* Sprint progress */}
+        <div className="flex items-center gap-2 mb-6">
+          {Array.from({ length: MAX_SPRINTS }, (_, i) => (
+            <div key={i} className="flex-1">
+              <div className={`h-2 rounded-full ${i + 1 < currentSprint ? "bg-success" : i + 1 === currentSprint ? "bg-primary" : "bg-secondary"}`} />
+            </div>
+          ))}
+          <span className="text-xs font-mono text-muted-foreground ml-1">{currentSprint}/{MAX_SPRINTS}</span>
+        </div>
+
+        <div className="text-center mb-6">
+          <div className="text-5xl mb-3">{currentEvent.icon}</div>
+          <Badge variant="outline" className={`${categoryColors[currentEvent.category]} mb-3`}>
+            <Zap className="w-3 h-3 mr-1" />
+            Evento: {categoryLabels[currentEvent.category]}
+          </Badge>
+          <h2 className="font-display text-xl font-bold text-foreground mb-2">{currentEvent.title}</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">{currentEvent.description}</p>
+          <p className="text-xs text-muted-foreground/60 mt-2 italic">
+            Após a Sprint {currentSprint} — Escolha como reagir:
+          </p>
+        </div>
+
+        <div className="space-y-3 mb-6">
+          {currentEvent.choices.map((choice, idx) => (
+            <Card
+              key={idx}
+              onClick={() => handleEventChoice(choice)}
+              className={`p-4 border-2 cursor-pointer transition-all hover:scale-[1.01] ${
+                eventChoice === choice ? "border-primary bg-primary/5 ring-1 ring-primary/30" : "border-border hover:border-primary/30"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-bold ${
+                  eventChoice === choice ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+                }`}>
+                  {String.fromCharCode(65 + idx)}
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold text-foreground mb-1">{choice.label}</h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{choice.description}</p>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Show consequence after choosing */}
+        {eventChoice && (
+          <Card className={`p-4 border-2 mb-6 ${impactColors[eventChoice.impact]}`}>
+            <div className="flex items-start gap-2">
+              <span className="text-lg">{impactIcons[eventChoice.impact]}</span>
+              <div>
+                <p className="text-sm font-semibold text-foreground mb-1">Consequência da sua decisão:</p>
+                <p className="text-sm text-foreground/80 leading-relaxed">{eventChoice.consequence}</p>
+                {eventChoice.capacityModifier && (
+                  <p className="text-xs text-muted-foreground mt-2 font-mono">
+                    📉 Impacto na capacidade: {eventChoice.capacityModifier > 0 ? "+" : ""}{eventChoice.capacityModifier} pts na próxima sprint
+                  </p>
+                )}
+                {eventChoice.injectItem && (
+                  <p className="text-xs text-muted-foreground mt-1 font-mono">
+                    📋 Novo item adicionado ao backlog: "{eventChoice.injectItem.title}"
+                  </p>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
+
+        <Button onClick={handleEventContinue} disabled={!eventChoice} className="w-full">
+          Continuar para Sprint {currentSprint + 1} →
+        </Button>
       </div>
     );
   }
@@ -452,6 +599,33 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
             ))}
           </div>
         </Card>
+
+        {/* Event Decisions */}
+        {eventHistory.length > 0 && (
+          <Card className="p-5 border-border mb-6">
+            <h3 className="font-display font-semibold text-foreground mb-3 text-sm flex items-center gap-2">
+              <Zap className="w-4 h-4 text-warning" />
+              Decisões em Eventos ({eventHistory.length})
+            </h3>
+            <div className="space-y-3">
+              {eventHistory.map((eh, idx) => {
+                const impactColors = { positive: "text-success", neutral: "text-warning", negative: "text-destructive" };
+                const impactLabels = { positive: "Boa decisão", neutral: "Decisão neutra", negative: "Decisão arriscada" };
+                return (
+                  <div key={idx} className="py-2 border-b border-border last:border-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-lg">{eh.event.icon}</span>
+                      <span className="text-sm font-medium text-foreground">{eh.event.title}</span>
+                      <span className="text-xs text-muted-foreground ml-auto">Sprint {eh.sprint}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-1">Escolha: <strong className="text-foreground">{eh.choice.label}</strong></p>
+                    <p className={`text-xs font-medium ${impactColors[eh.choice.impact]}`}>{impactLabels[eh.choice.impact]}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        )}
 
         {/* Recommendations */}
         <Card className="p-5 border-primary/20 bg-primary/5 mb-6">
