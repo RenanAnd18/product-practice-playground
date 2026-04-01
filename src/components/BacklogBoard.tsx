@@ -370,6 +370,105 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
     );
   }
 
+  // Event phase
+  if (phase === "event" && currentEvent) {
+    const categoryLabels = { stakeholder: "Stakeholder", team: "Time", market: "Mercado", technical: "Técnico" };
+    const categoryColors = {
+      stakeholder: "bg-warning/20 text-warning border-warning/30",
+      team: "bg-info/20 text-info border-info/30",
+      market: "bg-primary/20 text-primary border-primary/30",
+      technical: "bg-destructive/20 text-destructive border-destructive/30",
+    };
+    const impactColors = { positive: "border-success/40 bg-success/5", neutral: "border-primary/40 bg-primary/5", negative: "border-destructive/40 bg-destructive/5" };
+    const impactIcons = { positive: "✅", neutral: "⚠️", negative: "🔴" };
+
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6 font-mono text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Voltar
+        </button>
+
+        {/* Sprint progress */}
+        <div className="flex items-center gap-2 mb-6">
+          {Array.from({ length: MAX_SPRINTS }, (_, i) => (
+            <div key={i} className="flex-1">
+              <div className={`h-2 rounded-full ${i + 1 < currentSprint ? "bg-success" : i + 1 === currentSprint ? "bg-primary" : "bg-secondary"}`} />
+            </div>
+          ))}
+          <span className="text-xs font-mono text-muted-foreground ml-1">{currentSprint}/{MAX_SPRINTS}</span>
+        </div>
+
+        <div className="text-center mb-6">
+          <div className="text-5xl mb-3">{currentEvent.icon}</div>
+          <Badge variant="outline" className={`${categoryColors[currentEvent.category]} mb-3`}>
+            <Zap className="w-3 h-3 mr-1" />
+            Evento: {categoryLabels[currentEvent.category]}
+          </Badge>
+          <h2 className="font-display text-xl font-bold text-foreground mb-2">{currentEvent.title}</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">{currentEvent.description}</p>
+          <p className="text-xs text-muted-foreground/60 mt-2 italic">
+            Após a Sprint {currentSprint} — Escolha como reagir:
+          </p>
+        </div>
+
+        <div className="space-y-3 mb-6">
+          {currentEvent.choices.map((choice, idx) => (
+            <Card
+              key={idx}
+              onClick={() => handleEventChoice(choice)}
+              className={`p-4 border-2 cursor-pointer transition-all hover:scale-[1.01] ${
+                eventChoice === choice ? "border-primary bg-primary/5 ring-1 ring-primary/30" : "border-border hover:border-primary/30"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-bold ${
+                  eventChoice === choice ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+                }`}>
+                  {String.fromCharCode(65 + idx)}
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold text-foreground mb-1">{choice.label}</h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{choice.description}</p>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Show consequence after choosing */}
+        {eventChoice && (
+          <Card className={`p-4 border-2 mb-6 ${impactColors[eventChoice.impact]}`}>
+            <div className="flex items-start gap-2">
+              <span className="text-lg">{impactIcons[eventChoice.impact]}</span>
+              <div>
+                <p className="text-sm font-semibold text-foreground mb-1">Consequência da sua decisão:</p>
+                <p className="text-sm text-foreground/80 leading-relaxed">{eventChoice.consequence}</p>
+                {eventChoice.capacityModifier && (
+                  <p className="text-xs text-muted-foreground mt-2 font-mono">
+                    📉 Impacto na capacidade: {eventChoice.capacityModifier > 0 ? "+" : ""}{eventChoice.capacityModifier} pts na próxima sprint
+                  </p>
+                )}
+                {eventChoice.injectItem && (
+                  <p className="text-xs text-muted-foreground mt-1 font-mono">
+                    📋 Novo item adicionado ao backlog: "{eventChoice.injectItem.title}"
+                  </p>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
+
+        <Button onClick={handleEventContinue} disabled={!eventChoice} className="w-full">
+          Continuar para Sprint {currentSprint + 1} →
+        </Button>
+      </div>
+    );
+  }
+
   // All done phase — Performance Report
   if (phase === "feedback") {
     const totalDelivered = sprintHistory.reduce((sum, h) => sum + h.metrics.throughput, 0);
