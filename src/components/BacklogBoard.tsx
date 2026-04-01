@@ -279,6 +279,11 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
     setPhase("planning");
     setSprintMetrics(null);
     setSprintHistory([]);
+    setCurrentEvent(null);
+    setUsedEventIds([]);
+    setEventChoice(null);
+    setCapacityModifier(0);
+    setEventHistory([]);
   };
 
   const renderItem = (item: BacklogItem) => {
