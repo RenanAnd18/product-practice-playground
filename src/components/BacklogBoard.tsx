@@ -14,7 +14,7 @@ interface BacklogBoardProps {
 }
 
 type Column = "backlog" | "sprint" | "out";
-type Phase = "planning" | "results" | "feedback";
+type Phase = "planning" | "results" | "event" | "feedback";
 
 const MAX_SPRINTS = 5;
 
