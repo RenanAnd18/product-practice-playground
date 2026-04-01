@@ -3,6 +3,7 @@ import DashboardHeader from "@/components/DashboardHeader";
 import ChallengeCard from "@/components/ChallengeCard";
 import ChallengeView from "@/components/ChallengeView";
 import LevelComplete from "@/components/LevelComplete";
+import LevelCheckpoint from "@/components/LevelCheckpoint";
 import BacklogSimulation from "@/components/BacklogSimulation";
 import { challenges, challengesByDifficulty } from "@/data/challenges";
 import { Badge } from "@/components/ui/badge";
