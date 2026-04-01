@@ -81,7 +81,11 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
   const [sprintHistory, setSprintHistory] = useState<{ sprint: number; metrics: SprintMetrics }[]>([]);
   const [allItems, setAllItems] = useState<BacklogItem[]>(scenario.items);
   const [newItemsAnnouncement, setNewItemsAnnouncement] = useState<BacklogItem[]>([]);
-
+  const [currentEvent, setCurrentEvent] = useState<SprintEvent | null>(null);
+  const [usedEventIds, setUsedEventIds] = useState<string[]>([]);
+  const [eventChoice, setEventChoice] = useState<EventChoice | null>(null);
+  const [capacityModifier, setCapacityModifier] = useState(0);
+  const [eventHistory, setEventHistory] = useState<{ sprint: number; event: SprintEvent; choice: EventChoice }[]>([]);
   const itemMap = new Map(allItems.map((i) => [i.id, i]));
 
   const getSprintLoad = useCallback(() => {
