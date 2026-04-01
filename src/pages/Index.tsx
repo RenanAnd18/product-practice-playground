@@ -40,6 +40,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<"challenges" | "backlog">("challenges");
   const [results, setResults] = useState<Record<string, boolean>>({});
   const [completedLevel, setCompletedLevel] = useState<Difficulty | null>(null);
+  const [checkpointLevel, setCheckpointLevel] = useState<Difficulty | null>(null);
 
   const handleSelect = useCallback((id: string) => {
     setActiveChallenge(id);
