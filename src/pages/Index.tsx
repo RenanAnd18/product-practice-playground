@@ -57,6 +57,14 @@ const Index = () => {
         const difficulty = current.difficulty as Difficulty;
         const sameLevelChallenges = challengesByDifficulty[difficulty];
         const currentIndex = sameLevelChallenges.findIndex((c) => c.id === activeChallenge);
+        
+        // Checkpoint after question 5 (index 4)
+        if (currentIndex === 4) {
+          setActiveChallenge(null);
+          setCheckpointLevel(difficulty);
+          return;
+        }
+        
         const next = sameLevelChallenges[currentIndex + 1];
         if (next) {
           setActiveChallenge(next.id);
