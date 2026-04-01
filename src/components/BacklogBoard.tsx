@@ -99,7 +99,7 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
   const rawCapacity = currentSprint === 1
     ? 5
     : (sprintHistory.length > 0 ? sprintHistory[sprintHistory.length - 1].metrics.velocity : 5);
-  const sprintCapacity = Math.max(rawCapacity, 1);
+  const sprintCapacity = Math.max(rawCapacity + capacityModifier, 1);
 
   // Check if all backlog items are larger than capacity
   const smallestBacklogEffort = columns.backlog.length > 0
