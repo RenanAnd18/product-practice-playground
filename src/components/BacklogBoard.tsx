@@ -178,20 +178,65 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
   const handleAdvanceToNextSprint = () => {
     if (!sprintMetrics) return;
 
+    // End after MAX_SPRINTS
+    if (currentSprint >= MAX_SPRINTS) {
+      setPhase("feedback");
+      return;
+    }
+
+    // Check for random event before transitioning
+    const event = getRandomEvent(currentSprint, usedEventIds);
+    if (event) {
+      setCurrentEvent(event);
+      setUsedEventIds((prev) => [...prev, event.id]);
+      setPhase("event");
+      return;
+    }
+
+    // No event — proceed directly
+    proceedToNextSprint();
+  };
+
+  const handleEventChoice = (choice: EventChoice) => {
+    setEventChoice(choice);
+  };
+
+  const handleEventContinue = () => {
+    if (!eventChoice || !currentEvent) return;
+
+    // Record event in history
+    setEventHistory((prev) => [...prev, { sprint: currentSprint, event: currentEvent, choice: eventChoice }]);
+
+    // Apply capacity modifier
+    if (eventChoice.capacityModifier) {
+      setCapacityModifier(eventChoice.capacityModifier);
+    } else {
+      setCapacityModifier(0);
+    }
+
+    // Inject item if the choice adds one
+    if (eventChoice.injectItem) {
+      const newItem: BacklogItem = eventChoice.injectItem;
+      setAllItems((prev) => [...prev, newItem]);
+    }
+
+    setCurrentEvent(null);
+    setEventChoice(null);
+    proceedToNextSprint(eventChoice.injectItem ? eventChoice.injectItem : undefined);
+  };
+
+  const proceedToNextSprint = (extraItem?: BacklogItem) => {
+    if (!sprintMetrics) return;
+
     const delivered = new Set(sprintMetrics.deliveredIds);
     const notDelivered = sprintMetrics.notDeliveredIds;
 
-    // Remaining backlog items (not delivered)
     const remainingBacklog = columns.backlog.filter((id) => !delivered.has(id));
-    
-    // "Out" items come BACK to backlog (simulating real PO life)
     const outItems = columns.out.filter((id) => !delivered.has(id));
 
-    // Get incoming new items for this sprint transition
-    const incomingIndex = currentSprint - 1; // after sprint 1 → index 0
+    const incomingIndex = currentSprint - 1;
     const incomingItems = scenario.incomingItems?.[incomingIndex] ?? [];
 
-    // Add incoming items to allItems
     if (incomingItems.length > 0) {
       setAllItems((prev) => [...prev, ...incomingItems]);
       setNewItemsAnnouncement(incomingItems);
@@ -199,27 +244,20 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
       setNewItemsAnnouncement([]);
     }
 
-    // Merge: not delivered + remaining backlog + out items + new incoming
-    const newBacklog = [...remainingBacklog, ...notDelivered, ...outItems, ...incomingItems.map((i) => i.id)];
+    const newBacklog = [
+      ...remainingBacklog,
+      ...notDelivered,
+      ...outItems,
+      ...incomingItems.map((i) => i.id),
+      ...(extraItem ? [extraItem.id] : []),
+    ];
 
-    // End after MAX_SPRINTS
-    if (currentSprint >= MAX_SPRINTS) {
+    if (newBacklog.length === 0) {
       setPhase("feedback");
       return;
     }
 
-    const availableItems = newBacklog.length;
-    if (availableItems === 0) {
-      setPhase("feedback");
-      return;
-    }
-
-    setColumns({
-      backlog: newBacklog,
-      sprint: [],
-      out: [],
-    });
-
+    setColumns({ backlog: newBacklog, sprint: [], out: [] });
     setCurrentSprint((prev) => prev + 1);
     setPhase("planning");
     setSubmitted(false);
