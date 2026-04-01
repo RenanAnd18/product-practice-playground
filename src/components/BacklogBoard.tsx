@@ -600,6 +600,33 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
           </div>
         </Card>
 
+        {/* Event Decisions */}
+        {eventHistory.length > 0 && (
+          <Card className="p-5 border-border mb-6">
+            <h3 className="font-display font-semibold text-foreground mb-3 text-sm flex items-center gap-2">
+              <Zap className="w-4 h-4 text-warning" />
+              Decisões em Eventos ({eventHistory.length})
+            </h3>
+            <div className="space-y-3">
+              {eventHistory.map((eh, idx) => {
+                const impactColors = { positive: "text-success", neutral: "text-warning", negative: "text-destructive" };
+                const impactLabels = { positive: "Boa decisão", neutral: "Decisão neutra", negative: "Decisão arriscada" };
+                return (
+                  <div key={idx} className="py-2 border-b border-border last:border-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-lg">{eh.event.icon}</span>
+                      <span className="text-sm font-medium text-foreground">{eh.event.title}</span>
+                      <span className="text-xs text-muted-foreground ml-auto">Sprint {eh.sprint}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-1">Escolha: <strong className="text-foreground">{eh.choice.label}</strong></p>
+                    <p className={`text-xs font-medium ${impactColors[eh.choice.impact]}`}>{impactLabels[eh.choice.impact]}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        )}
+
         {/* Recommendations */}
         <Card className="p-5 border-primary/20 bg-primary/5 mb-6">
           <h3 className="font-display font-semibold text-foreground mb-3 text-sm flex items-center gap-2">
