@@ -98,14 +98,40 @@ const Index = () => {
     }
   }, [completedLevel]);
 
+  // Show checkpoint screen (after question 5)
+  if (checkpointLevel) {
+    const levelChallenges = challengesByDifficulty[checkpointLevel];
+    const first5 = levelChallenges.slice(0, 5);
+    return (
+      <div className="min-h-screen bg-background">
+        <LevelCheckpoint
+          difficulty={difficultyConfig[checkpointLevel].label}
+          challengesDone={first5}
+          results={results}
+          onContinue={() => {
+            // Continue to question 6
+            setCheckpointLevel(null);
+            setActiveChallenge(levelChallenges[5].id);
+          }}
+          onStop={() => {
+            // Show final results with only the 5 answered
+            setCheckpointLevel(null);
+            setCompletedLevel(checkpointLevel);
+          }}
+        />
+      </div>
+    );
+  }
+
   // Show level complete screen
   if (completedLevel) {
     const levelChallenges = challengesByDifficulty[completedLevel];
+    const answeredChallenges = levelChallenges.filter((c) => completedIds.has(c.id));
     return (
       <div className="min-h-screen bg-background">
         <LevelComplete
           difficulty={difficultyConfig[completedLevel].label}
-          challenges={levelChallenges}
+          challenges={answeredChallenges}
           results={results}
           onRetry={handleRetryLevel}
           onBack={() => setCompletedLevel(null)}
