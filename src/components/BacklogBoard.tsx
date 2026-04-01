@@ -1,11 +1,12 @@
 import { useState, useCallback } from "react";
-import { ArrowLeft, CheckCircle2, AlertTriangle, Package, Search, Wrench, GripVertical, Trophy, TrendingUp, TrendingDown, Minus, FileText, BarChart3 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, AlertTriangle, Package, Search, Wrench, GripVertical, Trophy, TrendingUp, TrendingDown, Minus, FileText, BarChart3, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import SprintResults from "./SprintResults";
 import type { SprintMetrics } from "./SprintResults";
 import type { BacklogScenario, BacklogItem } from "@/data/backlog-items";
+import { getRandomEvent, type SprintEvent, type EventChoice } from "@/data/sprint-events";
 
 interface BacklogBoardProps {
   scenario: BacklogScenario;
