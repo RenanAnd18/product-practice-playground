@@ -106,6 +106,8 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
     ? Math.min(...columns.backlog.map((id) => { const item = itemMap.get(id); return item ? effortValues[item.effort] : Infinity; }))
     : 0;
   const capacityTooLow = currentSprint > 1 && sprintCapacity < smallestBacklogEffort && columns.backlog.length > 0;
+  const canCloseSprintWithoutItems = capacityTooLow && columns.sprint.length === 0;
+  const canSubmitSprint = columns.sprint.length > 0 || canCloseSprintWithoutItems;
 
   const handleDragStart = (e: React.DragEvent, itemId: string) => {
     setDraggedItem(itemId);
@@ -753,6 +755,9 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
             <p className="text-xs text-info mt-2 font-medium">
               💡 Para continuar a simulação, você pode arrastar um item mesmo acima da capacidade. Na prática, converse com o time antes de assumir compromissos.
             </p>
+             <p className="text-xs text-foreground/80 mt-2">
+               Se nenhum item puder ser assumido nesta rodada, você também pode encerrar a sprint sem itens e seguir para a avaliação final da sprint.
+             </p>
           </Card>
         )}
       </div>
@@ -794,13 +799,30 @@ const BacklogBoard = ({ scenario, onBack }: BacklogBoardProps) => {
       </div>
 
       {!submitted ? (
-        <Button
-          onClick={handleSubmit}
-          disabled={columns.sprint.length === 0}
-          className="w-full"
-        >
-          {currentSprint === 1 ? "Validar Priorização" : `Executar Sprint ${currentSprint}`}
-        </Button>
+        <div className="space-y-3">
+          {canCloseSprintWithoutItems && (
+            <Card className="p-3 border-info/20 bg-info/5">
+              <p className="text-xs font-semibold text-info mb-1">Sprint sem compromisso possível</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Como nenhum item cabe na capacidade atual, você pode registrar a sprint como bloqueada/sem entregas e ainda assim avançar no fluxo para receber sua avaliação.
+              </p>
+            </Card>
+          )}
+
+          <Button
+            onClick={handleSubmit}
+            disabled={!canSubmitSprint}
+            className="w-full"
+          >
+            {canCloseSprintWithoutItems
+              ? currentSprint === MAX_SPRINTS
+                ? "Finalizar simulação e gerar avaliação"
+                : `Encerrar Sprint ${currentSprint} sem itens`
+              : currentSprint === 1
+                ? "Validar Priorização"
+                : `Executar Sprint ${currentSprint}`}
+          </Button>
+        </div>
       ) : (
         <div className="space-y-4">
           <Card className={`p-5 border ${score >= 75 ? "border-success/30 bg-success/5" : score >= 50 ? "border-warning/30 bg-warning/5" : "border-destructive/30 bg-destructive/5"}`}>
