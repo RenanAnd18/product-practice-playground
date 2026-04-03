@@ -38,7 +38,7 @@ const Index = () => {
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [streak, setStreak] = useState(0);
   const [activeChallenge, setActiveChallenge] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"challenges" | "backlog">("challenges");
+  const [activeTab, setActiveTab] = useState<"challenges" | "backlog" | "metrics">("challenges");
   const [results, setResults] = useState<Record<string, boolean>>({});
   const [completedLevel, setCompletedLevel] = useState<Difficulty | null>(null);
   const [checkpointLevel, setCheckpointLevel] = useState<Difficulty | null>(null);
