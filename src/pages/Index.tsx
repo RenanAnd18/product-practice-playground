@@ -7,8 +7,9 @@ import LevelCheckpoint from "@/components/LevelCheckpoint";
 import BacklogSimulation from "@/components/BacklogSimulation";
 import { challenges, challengesByDifficulty } from "@/data/challenges";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Swords, Crown, BookOpen, Kanban } from "lucide-react";
+import { Shield, Swords, Crown, BookOpen, Kanban, BarChart3 } from "lucide-react";
 import WhatIsPO from "@/components/WhatIsPO";
+import MetricsSection from "@/components/MetricsSection";
 
 const difficultyConfig = {
   junior: {
