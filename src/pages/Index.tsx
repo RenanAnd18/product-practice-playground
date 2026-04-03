@@ -242,8 +242,10 @@ const Index = () => {
             );
           })}
         </main>
-      ) : (
+      ) : activeTab === "backlog" ? (
         <BacklogSimulation />
+      ) : (
+        <MetricsSection />
       )}
     </div>
   );
