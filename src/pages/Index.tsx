@@ -7,8 +7,9 @@ import LevelCheckpoint from "@/components/LevelCheckpoint";
 import BacklogSimulation from "@/components/BacklogSimulation";
 import { challenges, challengesByDifficulty } from "@/data/challenges";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Swords, Crown, BookOpen, Kanban } from "lucide-react";
+import { Shield, Swords, Crown, BookOpen, Kanban, BarChart3 } from "lucide-react";
 import WhatIsPO from "@/components/WhatIsPO";
+import MetricsSection from "@/components/MetricsSection";
 
 const difficultyConfig = {
   junior: {
@@ -37,7 +38,7 @@ const Index = () => {
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [streak, setStreak] = useState(0);
   const [activeChallenge, setActiveChallenge] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"challenges" | "backlog">("challenges");
+  const [activeTab, setActiveTab] = useState<"challenges" | "backlog" | "metrics">("challenges");
   const [results, setResults] = useState<Record<string, boolean>>({});
   const [completedLevel, setCompletedLevel] = useState<Difficulty | null>(null);
   const [checkpointLevel, setCheckpointLevel] = useState<Difficulty | null>(null);
@@ -188,6 +189,17 @@ const Index = () => {
             <Kanban className="w-4 h-4" />
             Priorização de Backlog
           </button>
+          <button
+            onClick={() => setActiveTab("metrics")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md font-display text-sm font-medium transition-all ${
+              activeTab === "metrics"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <BarChart3 className="w-4 h-4" />
+            Métricas
+          </button>
         </div>
       </div>
 
@@ -230,8 +242,10 @@ const Index = () => {
             );
           })}
         </main>
-      ) : (
+      ) : activeTab === "backlog" ? (
         <BacklogSimulation />
+      ) : (
+        <MetricsSection />
       )}
     </div>
   );
