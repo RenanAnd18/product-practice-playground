@@ -189,6 +189,17 @@ const Index = () => {
             <Kanban className="w-4 h-4" />
             Priorização de Backlog
           </button>
+          <button
+            onClick={() => setActiveTab("metrics")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md font-display text-sm font-medium transition-all ${
+              activeTab === "metrics"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <BarChart3 className="w-4 h-4" />
+            Métricas
+          </button>
         </div>
       </div>
 
