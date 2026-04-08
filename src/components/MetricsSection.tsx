@@ -1,14 +1,39 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, CheckCircle2, BarChart3 } from "lucide-react";
+import { ArrowRight, CheckCircle2, BarChart3, ChevronDown, ChevronRight } from "lucide-react";
 import MetricChallengeView from "@/components/MetricChallengeView";
 import { metricsChallenges } from "@/data/metrics-challenges";
+
+interface MetricGroup {
+  name: string;
+  challenges: typeof metricsChallenges;
+}
 
 const MetricsSection = () => {
   const [activeMetric, setActiveMetric] = useState<string | null>(null);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [results, setResults] = useState<Record<string, boolean>>({});
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  const groups = useMemo<MetricGroup[]>(() => {
+    const map = new Map<string, typeof metricsChallenges>();
+    metricsChallenges.forEach((m) => {
+      const arr = map.get(m.metricName) || [];
+      arr.push(m);
+      map.set(m.metricName, arr);
+    });
+    return Array.from(map.entries()).map(([name, challenges]) => ({ name, challenges }));
+  }, []);
+
+  const toggleGroup = (name: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  };
 
   const handleComplete = useCallback(
     (isOptimal: boolean) => {
@@ -64,41 +89,82 @@ const MetricsSection = () => {
         )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {metricsChallenges.map((metric) => {
-          const isCompleted = completedIds.has(metric.id);
-          const wasCorrect = results[metric.id];
+      <div className="space-y-4">
+        {groups.map((group) => {
+          const groupCompleted = group.challenges.filter((c) => completedIds.has(c.id)).length;
+          const groupCorrect = group.challenges.filter((c) => results[c.id] === true).length;
+          const isExpanded = expandedGroups.has(group.name);
+          const allDone = groupCompleted === group.challenges.length;
+
           return (
-            <Card
-              key={metric.id}
-              className={`group relative border transition-all duration-300 cursor-pointer ${
-                isCompleted
-                  ? wasCorrect
+            <div key={group.name}>
+              <button
+                onClick={() => toggleGroup(group.name)}
+                className={`w-full flex items-center justify-between p-4 rounded-lg border transition-all duration-200 ${
+                  allDone
                     ? "border-success/30 bg-success/5 hover:border-success/50"
-                    : "border-destructive/30 bg-destructive/5 hover:border-destructive/50"
-                  : "border-border hover:border-primary/50 hover:bg-secondary/50"
-              }`}
-              onClick={() => setActiveMetric(metric.id)}
-            >
-              <div className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <Badge variant="outline" className="border-info/30 text-info text-xs">
-                    {metric.metricName}
-                  </Badge>
-                  {isCompleted ? (
-                    <CheckCircle2 className={`w-5 h-5 ${wasCorrect ? "text-success" : "text-destructive"}`} />
+                    : "border-border bg-secondary/30 hover:border-primary/40 hover:bg-secondary/50"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  {isExpanded ? (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
                   ) : (
-                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
                   )}
+                  <h3 className="font-display font-semibold text-foreground">{group.name}</h3>
+                  <Badge variant="outline" className="border-info/30 text-info text-xs">
+                    {groupCompleted}/{group.challenges.length}
+                  </Badge>
                 </div>
-                <h3 className="font-display text-lg font-semibold text-foreground mb-2">
-                  {metric.title}
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
-                  {metric.caseDescription}
-                </p>
-              </div>
-            </Card>
+                {groupCompleted > 0 && (
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {groupCorrect}/{groupCompleted} acertos
+                  </span>
+                )}
+              </button>
+
+              {isExpanded && (
+                <div className="mt-2 ml-4 space-y-2">
+                  {group.challenges.map((metric, i) => {
+                    const isCompleted = completedIds.has(metric.id);
+                    const wasCorrect = results[metric.id];
+                    return (
+                      <Card
+                        key={metric.id}
+                        className={`group relative border transition-all duration-300 cursor-pointer ${
+                          isCompleted
+                            ? wasCorrect
+                              ? "border-success/30 bg-success/5 hover:border-success/50"
+                              : "border-destructive/30 bg-destructive/5 hover:border-destructive/50"
+                            : "border-border hover:border-primary/50 hover:bg-secondary/50"
+                        }`}
+                        onClick={() => setActiveMetric(metric.id)}
+                      >
+                        <div className="p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <Badge variant="outline" className="border-muted text-muted-foreground text-xs">
+                              Questão {i + 1}
+                            </Badge>
+                            {isCompleted ? (
+                              <CheckCircle2 className={`w-4 h-4 ${wasCorrect ? "text-success" : "text-destructive"}`} />
+                            ) : (
+                              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                            )}
+                          </div>
+                          <h4 className="font-display text-sm font-semibold text-foreground mb-1">
+                            {metric.title}
+                          </h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                            {metric.caseDescription}
+                          </p>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
