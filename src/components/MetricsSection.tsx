@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, CheckCircle2, BarChart3, ChevronDown, ChevronRight } from "lucide-react";
 import MetricChallengeView from "@/components/MetricChallengeView";
+import MetricGroupResults from "@/components/MetricGroupResults";
 import { metricsChallenges } from "@/data/metrics-challenges";
 
 interface MetricGroup {
@@ -15,6 +16,7 @@ const MetricsSection = () => {
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [results, setResults] = useState<Record<string, boolean>>({});
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [showGroupResult, setShowGroupResult] = useState<string | null>(null);
 
   const groups = useMemo<MetricGroup[]>(() => {
     const map = new Map<string, typeof metricsChallenges>();
@@ -35,24 +37,71 @@ const MetricsSection = () => {
     });
   };
 
+  const findGroupForChallenge = useCallback(
+    (challengeId: string) => groups.find((g) => g.challenges.some((c) => c.id === challengeId)),
+    [groups],
+  );
+
   const handleComplete = useCallback(
     (isOptimal: boolean) => {
       if (!activeMetric) return;
-      setCompletedIds((prev) => new Set([...prev, activeMetric]));
-      setResults((prev) => ({ ...prev, [activeMetric]: isOptimal }));
+      const newCompleted = new Set([...completedIds, activeMetric]);
+      const newResults = { ...results, [activeMetric]: isOptimal };
+      setCompletedIds(newCompleted);
+      setResults(newResults);
 
-      const idx = metricsChallenges.findIndex((m) => m.id === activeMetric);
-      const next = metricsChallenges[idx + 1];
-      if (next) {
-        setActiveMetric(next.id);
-      } else {
+      const group = findGroupForChallenge(activeMetric);
+      if (!group) {
         setActiveMetric(null);
+        return;
+      }
+
+      // Find next uncompleted challenge in this group
+      const nextInGroup = group.challenges.find((c) => c.id !== activeMetric && !newCompleted.has(c.id));
+      if (nextInGroup) {
+        setActiveMetric(nextInGroup.id);
+      } else {
+        // All in group done — show group results
+        setActiveMetric(null);
+        setShowGroupResult(group.name);
       }
     },
-    [activeMetric],
+    [activeMetric, completedIds, results, findGroupForChallenge],
   );
 
+  const handleNextGroup = useCallback(() => {
+    if (!showGroupResult) return;
+    const idx = groups.findIndex((g) => g.name === showGroupResult);
+    const nextGroup = groups[idx + 1];
+    setShowGroupResult(null);
+    if (nextGroup) {
+      const firstUncompleted = nextGroup.challenges.find((c) => !completedIds.has(c.id));
+      if (firstUncompleted) {
+        setActiveMetric(firstUncompleted.id);
+      }
+    }
+  }, [showGroupResult, groups, completedIds]);
+
   const current = metricsChallenges.find((m) => m.id === activeMetric);
+
+  // Show group results screen
+  if (showGroupResult) {
+    const group = groups.find((g) => g.name === showGroupResult);
+    const groupIdx = groups.findIndex((g) => g.name === showGroupResult);
+    const nextGroup = groups[groupIdx + 1];
+    if (group) {
+      return (
+        <MetricGroupResults
+          metricName={group.name}
+          challenges={group.challenges}
+          results={results}
+          nextGroupName={nextGroup?.name}
+          onBack={() => setShowGroupResult(null)}
+          onNextGroup={handleNextGroup}
+        />
+      );
+    }
+  }
 
   if (current) {
     return (
@@ -117,11 +166,24 @@ const MetricsSection = () => {
                     {groupCompleted}/{group.challenges.length}
                   </Badge>
                 </div>
-                {groupCompleted > 0 && (
-                  <span className="text-xs text-muted-foreground font-mono">
-                    {groupCorrect}/{groupCompleted} acertos
-                  </span>
-                )}
+                <div className="flex items-center gap-3">
+                  {groupCompleted > 0 && (
+                    <span className="text-xs text-muted-foreground font-mono">
+                      {groupCorrect}/{groupCompleted} acertos
+                    </span>
+                  )}
+                  {allDone && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowGroupResult(group.name);
+                      }}
+                      className="text-xs text-primary hover:text-primary/80 font-mono underline underline-offset-2"
+                    >
+                      Ver resultado
+                    </button>
+                  )}
+                </div>
               </button>
 
               {isExpanded && (
