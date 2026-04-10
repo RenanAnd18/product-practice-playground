@@ -1,10 +1,22 @@
 import { useState, useMemo } from "react";
-import { ArrowLeft, Lightbulb, CheckCircle2, XCircle, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { ArrowLeft, Lightbulb, CheckCircle2, XCircle, TrendingUp, TrendingDown, Minus, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import MetricChart from "@/components/MetricChart";
 import type { MetricChallenge, MetricDecision } from "@/data/metrics-challenges";
+
+const metricSummaries: Record<string, string> = {
+  "Lead Time": "Mede o tempo total desde a criação de um item até sua entrega ao usuário final. Inclui tempo de espera, desenvolvimento, testes e deploy. Quanto menor, mais ágil é o fluxo.",
+  "Cycle Time": "Mede o tempo entre o início do trabalho ativo em um item e sua conclusão. Diferente do Lead Time, não inclui o tempo de espera na fila. É o principal indicador de eficiência do time.",
+  "Throughput": "Quantidade de itens entregues em um período. Indica a capacidade de entrega do time. Analisar tendências é mais útil do que valores absolutos.",
+  "Velocity": "Soma dos story points entregues por sprint. Serve para planejamento de capacidade, não para comparar times. Estabilidade importa mais que valor alto.",
+  "Burndown / Burnup": "Burndown mostra o trabalho restante ao longo da sprint. Burnup mostra o trabalho concluído acumulado. Juntos revelam se o escopo está mudando e se o ritmo é sustentável.",
+  "Taxa de Entrega no Prazo": "Percentual de itens entregues dentro do prazo comprometido. Reflete a previsibilidade do time e a qualidade das estimativas. Meta saudável: acima de 80%.",
+  "WIP (Work in Progress)": "Quantidade de itens em andamento simultaneamente. WIP alto causa context switching, aumenta lead time e reduz qualidade. Limitar WIP é essencial para fluxo contínuo.",
+  "Cone da Incerteza": "Mostra como a margem de erro das estimativas diminui conforme o projeto avança. No início, estimativas podem variar de 0.25x a 4x. Conforme mais informação é obtida, a faixa se estreita.",
+};
 
 interface MetricChallengeViewProps {
   challenge: MetricChallenge;
