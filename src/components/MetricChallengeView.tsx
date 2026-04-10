@@ -60,9 +60,23 @@ const MetricChallengeView = ({ challenge, onBack, onComplete }: MetricChallengeV
         <Badge variant="outline" className="mb-3 border-info/30 text-info">
           Métrica · {challenge.metricName}
         </Badge>
-        <h2 className="font-display text-2xl font-bold text-foreground mb-3">
-          {challenge.title}
-        </h2>
+        <div className="flex items-center gap-3 mb-3">
+          <h2 className="font-display text-2xl font-bold text-foreground">
+            {challenge.title}
+          </h2>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="shrink-0 gap-1.5 border-primary/30 text-primary hover:bg-primary/10">
+                <HelpCircle className="w-3.5 h-3.5" />
+                Dica
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 text-sm leading-relaxed">
+              <p className="font-display font-semibold text-foreground mb-1">{challenge.metricName}</p>
+              <p className="text-muted-foreground">{metricSummaries[challenge.metricName] || "Métrica de acompanhamento de projetos ágeis."}</p>
+            </PopoverContent>
+          </Popover>
+        </div>
         <p className="text-muted-foreground leading-relaxed text-sm">{challenge.caseDescription}</p>
       </div>
 
