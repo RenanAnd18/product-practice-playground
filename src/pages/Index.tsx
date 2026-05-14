@@ -5,9 +5,10 @@ import ChallengeView from "@/components/ChallengeView";
 import LevelComplete from "@/components/LevelComplete";
 import LevelCheckpoint from "@/components/LevelCheckpoint";
 import BacklogSimulation from "@/components/BacklogSimulation";
+import UserStoryLab from "@/components/UserStoryLab";
 import { challenges, challengesByDifficulty } from "@/data/challenges";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Swords, Crown, BookOpen, Kanban, BarChart3 } from "lucide-react";
+import { Shield, Swords, Crown, BookOpen, Kanban, BarChart3, MessagesSquare } from "lucide-react";
 import WhatIsPO from "@/components/WhatIsPO";
 import MetricsSection from "@/components/MetricsSection";
 
@@ -38,7 +39,7 @@ const Index = () => {
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [streak, setStreak] = useState(0);
   const [activeChallenge, setActiveChallenge] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"challenges" | "backlog" | "metrics">("challenges");
+  const [activeTab, setActiveTab] = useState<"challenges" | "backlog" | "metrics" | "userstories">("challenges");
   const [results, setResults] = useState<Record<string, boolean>>({});
   const [completedLevel, setCompletedLevel] = useState<Difficulty | null>(null);
   const [checkpointLevel, setCheckpointLevel] = useState<Difficulty | null>(null);
@@ -200,6 +201,17 @@ const Index = () => {
             <BarChart3 className="w-4 h-4" />
             Métricas
           </button>
+          <button
+            onClick={() => setActiveTab("userstories")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md font-display text-sm font-medium transition-all ${
+              activeTab === "userstories"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <MessagesSquare className="w-4 h-4" />
+            Histórias de Usuário
+          </button>
         </div>
       </div>
 
@@ -244,8 +256,10 @@ const Index = () => {
         </main>
       ) : activeTab === "backlog" ? (
         <BacklogSimulation />
-      ) : (
+      ) : activeTab === "metrics" ? (
         <MetricsSection />
+      ) : (
+        <UserStoryLab />
       )}
     </div>
   );
