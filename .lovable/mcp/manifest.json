@@ -1,0 +1,175 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.2",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "product-masterclass",
+      "version": "0.1.0",
+      "title": "Product Masterclass"
+    },
+    "tools": [
+      {
+        "name": "list_challenges",
+        "title": "Listar desafios de Product Owner",
+        "description": "Lista os cenários de treino de Product Owner (em português) com id, título, categoria e nível (junior, pleno, senior). Use get_challenge para ver o cenário completo.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "difficulty": {
+              "type": "string",
+              "enum": [
+                "junior",
+                "pleno",
+                "senior"
+              ],
+              "description": "Filtra pelo nível de senioridade."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_challenge",
+        "title": "Detalhar um desafio de Product Owner",
+        "description": "Retorna um cenário completo de treino de PO: contexto, mensagem do stakeholder, opções de decisão com feedback e impacto, e pontos de aprendizado.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Id do desafio, obtido em list_challenges."
+            },
+            "includeAnswers": {
+              "type": "boolean",
+              "description": "Se false, omite qual decisão é a ideal e os feedbacks (padrão: true)."
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_metric_challenges",
+        "title": "Listar desafios de métricas",
+        "description": "Lista os desafios de interpretação de métricas de entrega (Lead Time, Cycle Time, Throughput, Velocidade, WIP, Cone da Incerteza, etc.) com id, título e métrica.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "metricName": {
+              "type": "string",
+              "description": "Filtra pelo nome da métrica (case-insensitive, busca parcial)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_metric_challenge",
+        "title": "Detalhar um desafio de métricas",
+        "description": "Retorna um desafio de métrica completo: descrição do caso, série de dados do gráfico, destaque, opções de decisão com feedback e pontos de aprendizado.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Id do desafio, obtido em list_metric_challenges."
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_backlog_scenario",
+        "title": "Cenários de priorização de backlog",
+        "description": "Sem id, lista os cenários de simulação de priorização de backlog. Com id, retorna o cenário completo: contexto, restrição de capacidade, itens, itens que chegam por sprint, ordem ideal e explicação.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Id do cenário. Omita para listar todos."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_client_scenario",
+        "title": "Cenários de cliente para histórias de usuário",
+        "description": "Sem id, lista os cenários do laboratório de histórias de usuário (cliente, empresa, nível, tags). Com id, retorna a transcrição completa da conversa com o cliente para praticar escrita de histórias.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Id do cenário. Omita para listar todos."
+            },
+            "difficulty": {
+              "type": "string",
+              "enum": [
+                "junior",
+                "pleno",
+                "senior"
+              ],
+              "description": "Filtra a listagem pelo nível de senioridade."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
